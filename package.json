@@ -8,6 +8,6 @@
     "dev:cloudflare": "cd dist/cloudflare && python -m uv run pywrangler dev"
   },
   "devDependencies": {
-    "wrangler": "^4.64.0"
+    "wrangler": "4.151.1"
   }
 }
