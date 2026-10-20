@@ -9,7 +9,7 @@
   "scripts/audit_xls.py": "825ad3be54799cf413ab4f2c95fcb6dafe38fe978935b9d7ddb764606c48f4a4",
   "scripts/check_route.py": "9069dc7830b365af922c4a0a2a8491c6531430c709389e0fd5f145d632157fd3",
   "scripts/run_local.py": "afe479ae2f444520ecd0bee7447cd1ceb026f397db78c104d0335940d625f815",
-  "scripts/smoke_browser.py": "63bcb8766bb5bab44d60740d5375d43f12bacdbaddcd38524e9a3826fb2688d7",
+  "scripts/smoke_browser.py": "2d64941b5449daf4e89dc6bcd8a838d334c31d96a8eb92eacde6799ca995b467",
   "scripts/smoke_ocr.py": "8efaccb8d28e4d5f583e87dbfddf42ec590d9544e3ffad23960e0bc0d2bcd6db",
   "scripts/validate_wtransnet.py": "b9e916fd3ba16a46000d040412e0cac1dff7d84a873d9225819c9fe2a5a6cd3b",
   "scripts/visual_smoke.py": "ab1dce7c6f010afcf3bd412b517fc8707017da1dd3b348056073f94dab8e3651",

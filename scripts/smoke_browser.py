@@ -70,6 +70,10 @@ def main():
                 assert 'Parada 1' in page.locator('#rich-output').inner_text()
                 assert 'Logrono' in page.locator('#tsv-output').input_value()
                 page.locator('[data-path="service"]').select_option('GROUPAGE')
+                # History restored an explicit 13.6 m. Clear it deliberately;
+                # dimensions must never overwrite an existing confirmed value.
+                expect(page.locator('[data-path="linear_meters"]')).to_have_value('13.6')
+                page.locator('[data-path="linear_meters"]').fill('')
                 page.locator('#packages-json').fill(json.dumps([{'length_m':'1.2','width_m':'.8','quantity':7}]))
                 page.locator('[data-path="dimensions_confirmed"]').select_option('S')
                 page.check('#reviewed');expect(page.locator('#result-status')).to_have_text('REVISADO')
