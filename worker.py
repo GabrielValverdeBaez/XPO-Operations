@@ -1,8 +1,7 @@
-"""Explicit ASGI entrypoint supported by the deployed Workers runtime SDK."""
-from workers import WorkerEntrypoint, asgi
+"""Module-level entrypoint compatible with the Python runtime bundled by Wrangler."""
 from cloud_adapter.api import app
 
 
-class Default(WorkerEntrypoint):
-    async def fetch(self, request):
-        return await asgi.fetch(app, request, self.env)
+async def on_fetch(request, env):
+    import asgi
+    return await asgi.fetch(app, request, env)
