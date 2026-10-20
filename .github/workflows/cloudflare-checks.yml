@@ -3,7 +3,7 @@ on:
   push:
     branches: ['feat/cloudflare-deployment']
   pull_request:
-    paths: ['cloud_adapter/**', 'cloud_assets/**', 'worker.py', 'wrangler.jsonc', 'pyproject.toml', 'package.json', 'scripts/build_cloudflare.py', 'scripts/smoke_cloudflare.py', 'tests/test_cloud_adapter.py', 'static/**', '.github/workflows/cloudflare-checks.yml']
+    paths: ['cloud_adapter/**', 'cloud_assets/**', 'worker.py', 'wrangler.jsonc', 'pyproject.toml', 'package.json', 'scripts/build_cloudflare.py', 'scripts/smoke_cloudflare.py', 'tests/test_cloud_adapter.py', 'tests/test_cloud_ffi.py', 'static/**', '.github/workflows/cloudflare-checks.yml']
   workflow_dispatch:
 concurrency:
   group: cloudflare-${{ github.ref }}
@@ -28,11 +28,34 @@ jobs:
       - run: python scripts/build_cloudflare.py
       - run: python -m pytest -q
       - run: python scripts/check_route.py
+      - run: python -m py_compile scripts/smoke_cloudflare.py
       - run: node --check static/app.js && node --check cloud_assets/login.js && node --check cloud_assets/cloud.js
       - name: Bundle without deployment
-        run: cd dist/cloudflare && uv run pywrangler deploy --dry-run
+        run: |
+          cd dist/cloudflare
+          uv run pywrangler deploy --dry-run > /tmp/xpo-dry-run.log 2>&1 || { tail -50 /tmp/xpo-dry-run.log; exit 1; }
+          echo 'PASS: Python Worker bundle dry-run (no deployment)'
       - name: Actual Python Worker and local D1 integration
-        run: python scripts/smoke_cloudflare.py
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          import sys
+          # Only the disposable local test bundle gets diagnostics. This runner
+          # has no Cloudflare credentials and the smoke uses synthetic loads.
+          target = Path('dist/cloudflare/cloud_adapter/api.py')
+          original = target.read_text()
+          marker = '                except Exception:\n                    # Provider errors'
+          diagnostic = '                except Exception:\n                    import traceback\n                    traceback.print_exc()\n                    # Provider errors'
+          if original.count(marker) != 1:
+              raise SystemExit('D1 diagnostic insertion point changed; review required')
+          try:
+              target.write_text(original.replace(marker, diagnostic))
+              result = subprocess.run([sys.executable, 'scripts/smoke_cloudflare.py'])
+          finally:
+              target.write_text(original)
+          raise SystemExit(result.returncode)
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
