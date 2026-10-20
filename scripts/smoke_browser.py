@@ -4,6 +4,7 @@ The supplied URL token is never written to the report or screenshot.
 """
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -55,7 +56,7 @@ def main():
                 page.click('.history-row button');expect(page.locator('[data-path="weight_kg"]')).to_have_value('15000')
                 expect(page.locator('#copy-tsv')).to_be_disabled()
                 page.click('[data-tab="rules"]');expect(page.locator('#rules-json')).to_contain_text('')
-                page.wait_for_function("document.querySelector('#rules-json').value.includes('revision')")
+                expect(page.locator('#rules-json')).to_have_value(re.compile(r'"revision"'))
                 rules=json.loads(page.locator('#rules-json').input_value());rules['reason']='Browser smoke test'
                 page.locator('#rules-json').fill(json.dumps(rules));page.click('#save-rules')
                 expect(page.locator('#notice')).to_contain_text('nueva revision')
