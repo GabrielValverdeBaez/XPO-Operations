@@ -28,6 +28,13 @@ Precio cliente: 900'''
 def main():
     dev=BUNDLE/'.dev.vars'
     if dev.exists():raise SystemExit('Refuse to overwrite existing .dev.vars')
+    # CI workerd rate-limit emulator blocks the first login; test D1 separately.
+    # This edits only the generated temporary bundle, not production configuration.
+    config_file=BUNDLE/'wrangler.jsonc'
+    original_config=config_file.read_text()
+    config=json.loads(original_config)
+    config.pop('ratelimits', None)
+    config_file.write_text(json.dumps(config, indent=2)+'\n')
     secret=secrets.token_urlsafe(48)
     dev.write_text('XPO_LOGIN_KEY="'+secret+'"\n');dev.chmod(0o600)
     checks=[];proc=None
@@ -94,7 +101,7 @@ def main():
                     assert post('/auth/logout',{}).status_code==200
                     assert c.get('/api/history').status_code==401
                     checks.append('private backup, cross-origin rejection, logout')
-                result={'status':'PASS','runtime':'actual workerd Python Worker + local D1','production_deployment':False,'synthetic_data_only':True,'checks':checks}
+                result={'status':'PASS','runtime':'actual workerd Python Worker + local D1','rate_limit_binding_tested':False,'production_deployment':False,'synthetic_data_only':True,'checks':checks}
                 (ROOT/'evidence/cloudflare-runtime.json').write_text(json.dumps(result,indent=2)+'\n')
                 print(json.dumps(result,indent=2))
             except Exception:
@@ -107,5 +114,6 @@ def main():
             try:proc.wait(timeout=10)
             except subprocess.TimeoutExpired:proc.kill();proc.wait()
         dev.unlink(missing_ok=True)
+        config_file.write_text(original_config)
 
 if __name__=='__main__':main()
