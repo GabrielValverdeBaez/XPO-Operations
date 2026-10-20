@@ -63,11 +63,11 @@ T-011 + T-013 → T-014
 - T-001 permanece sin cerrar hasta contraste documental y aceptación operativa; T-002 sigue bloqueada.
 
 ## READY
-- **T-001** es la única tarea sin dependencias previas. Precisa reunir artefactos de referencia; no declarar DONE por existencia de este documento.
+- **T-001** es la única tarea sin dependencias previas. XLS original recibido y encabezados contrastados. Faltan listas/validaciones exhaustivas y ejemplos aceptados; no declarar DONE aún.
 - Cualquier desarrollo de código posterior está **NO INICIADO**.
 
 ## BLOCKED
-- **Contrato oficial de 26 columnas Wtransnet:** aún no proporcionado ni validado.
+- **Encabezados A:Z:** cotejados con el XLS proporcionado; **validaciones internas del libro:** todavía no auditadas íntegramente.
 - **Ejemplos reales anonimizados y resultado esperado:** necesarios para golden tests.
 - **Datos históricos para tarifas:** ausentes; por defecto «Pendiente de validar».
 
@@ -78,4 +78,4 @@ T-011 + T-013 → T-014
 - T-004 es un experimento: no fijar stack definitivamente sin evaluar simplicidad y despliegue real.
 
 ## Siguiente paso
-Ejecutar T-001. Recuperar tabla Wtransnet de 26 columnas y ejemplos de cargas correctas (anonimizados). Congelar contrato mediante revisión antes del código.
+Continuar T-001 con validaciones del XLS y ejemplos de cargas correctas anonimizados. Congelar contrato mediante revisión antes de los generadores.
