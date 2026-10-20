@@ -8,7 +8,7 @@ domain:
 - logistics
 - software
 project_type: create
-subtype: local-web-application
+subtype: local-and-private-cloud-web-application
 complexity: 3
 uncertainty: 3
 risk: 3
@@ -19,6 +19,7 @@ research_level: R1
 freshness: evolving
 execution_environment:
 - local
+- cloud
 - web
 duration_profile: medium
 collaboration_model: human-agent
@@ -34,10 +35,10 @@ updated_at: '2026-10-20'
 # XPO Load Studio - Proyecto
 
 ## Intent
-Sustituir la generacion manual y variable con IA por un flujo local, verificable y reproducible de textos XPO bilingues y filas Wtransnet.
+Sustituir la generacion manual y variable con IA por un flujo verificable y reproducible de textos XPO bilingues y filas Wtransnet. Mantener la version local y anadir alojamiento privado Cloudflare autorizado expresamente por el operador el 20/10/2026.
 
 ## Desired Outcome
-Un operador pega una orden o introduce datos, revisa campos y copia dos salidas exactas con historial y trazabilidad. Entradas adicionales: texto libre acotado, Excel y OCR local; tarifas con fuentes verificables.
+Un operador pega una orden o introduce datos, revisa campos y copia dos salidas exactas con historial y trazabilidad. Entradas adicionales: texto libre acotado, Excel y OCR local; tarifas con fuentes verificables. La variante Cloudflare comparte el motor, no depende del Mac mini y declara OCR no disponible en cloud.
 
 ## Objectives
 ### O-001 Fiabilidad
@@ -49,19 +50,19 @@ Texto conforme al formato aprobado y registro de 26 columnas contrastado con la 
 ### O-004 Extensibilidad
 Parsers, reglas por cliente, historial, OCR y precios separados de los renderizadores.
 ### O-005 Privacidad y operacion
-Ejecucion local, futuro Mac mini y acceso privado, sin exposicion publica.
+Conservar ejecucion local y futura instalacion Mac mini. Anadir variante Cloudflare con autenticacion privada y D1 dedicado; nunca acceso anonimo a datos operativos.
 
 ## Scope
-Ingesta, modelo tipado, trazabilidad, reglas deterministas, revision, doble salida, importacion, pruebas y persistencia. La autorizacion de implementacion autonoma sustituye la antigua fase de solo documentos. Ver ROUTE para cobertura real, no solo intencion.
+Ingesta, modelo tipado, trazabilidad, reglas deterministas, revision, doble salida, importacion, pruebas y persistencia. La autorizacion de implementacion autonoma sustituye la antigua fase de solo documentos. La ampliacion cloud permite crear exclusivamente recursos XPO y publicar la aplicacion protegida, no exponer datos ni secretos. Ver ROUTE para cobertura real.
 
 ## Non-goals
-Publicacion automatica en Wtransnet, escritura de FOTE, sustituir decisiones comerciales, inventar tarifas, confiar ciegamente en OCR, integrar IA generativa obligatoria, exponer Internet o credenciales.
+Publicacion automatica en Wtransnet, escritura de FOTE, sustituir decisiones comerciales, inventar tarifas, confiar ciegamente en OCR, integrar IA generativa obligatoria, exponer datos sin autenticar o credenciales, modificar otros proyectos o contratar planes de pago.
 
 ## Constraints
-No datos reales ni original XLS en GitHub publico. Datos actuales prevalecen sobre defaults. ADR solo explicito o regla confirmada. Dos precios independientes; un unico mercado estimado o pendiente. CP no inventados. Sin fusion automatica de ramas ni acceso publico. La aceptacion operativa, cambios comerciales y configuracion de red requieren intervencion explicita cuando corresponda.
+No datos reales ni original XLS en GitHub publico. Datos actuales prevalecen sobre defaults. ADR solo explicito o regla confirmada. Dos precios independientes; un unico mercado estimado o pendiente. CP no inventados. Sin fusion automatica de ramas. La aceptacion operativa y cambios comerciales requieren evidencia del operador. El despliegue cloud ya esta autorizado, pero los secretos deben configurarse por un canal privado y una URL asignada no demuestra funcionamiento.
 
 ## Critical Assumptions
-La plantilla ha sido auditada directamente (hash y DV persistidos). Variaciones de FOTE siguen exigiendo fixtures. No existen tarifas reales ni cinco pares operativos aceptados nuevos. Mac mini/Tailscale no han sido desplegados en esta ejecucion. Estos pendientes no bloquean desarrollar en rama; si bloquean declarar produccion lista.
+La plantilla ha sido auditada directamente (hash y DV persistidos). Variaciones de FOTE siguen exigiendo fixtures. No existen tarifas reales ni cinco pares operativos aceptados nuevos. Mac mini/Tailscale no han sido desplegados en esta ejecucion. Cloudflare tiene Worker y D1 propios creados; la app alojada todavia no esta publicada. Los permisos OAuth de recursos no permiten crear la credencial API que necesita el build.
 
 ## Gates
-No liberar como MVP operativo hasta pruebas de navegador, pegado y ejemplos revisados. No reducir los limites comerciales, de privacidad o de envio. Replan y decision de stack en docs/DECISIONS.md.
+No liberar como MVP operativo hasta pruebas de navegador, pegado y ejemplos revisados. No reducir limites comerciales, de privacidad o de envio. T-015 verifica workerd y D1 local; T-016 exige URL HTTPS y persistencia remota reales. Replan local original en docs/DECISIONS.md; ampliacion cloud y handoff verificable en docs/CLOUDFLARE_DEPLOYMENT.md.
