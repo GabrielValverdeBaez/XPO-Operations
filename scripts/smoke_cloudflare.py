@@ -11,6 +11,7 @@ import httpx
 from openpyxl import Workbook
 
 ROOT=Path(__file__).resolve().parents[1]
+BUNDLE=ROOT/'dist/cloudflare'
 BASE='https://127.0.0.1:8790'
 SAMPLE='''Referencia: CLOUD-SYNTHETIC
 Cliente: XPO TRANSPORT SOLUTIONS SPAIN SL
@@ -25,14 +26,14 @@ Precio cliente: 900'''
 
 
 def main():
-    dev=ROOT/'.dev.vars'
+    dev=BUNDLE/'.dev.vars'
     if dev.exists():raise SystemExit('Refuse to overwrite existing .dev.vars')
     secret=secrets.token_urlsafe(48)
     dev.write_text('XPO_LOGIN_KEY="'+secret+'"\n');dev.chmod(0o600)
     checks=[];proc=None
     try:
         with tempfile.TemporaryFile(mode='w+') as log:
-            proc=subprocess.Popen(['uv','run','pywrangler','dev','--ip','127.0.0.1','--port','8790','--local-protocol','https'],cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,env={**os.environ,'CI':'true','WRANGLER_SEND_METRICS':'false'})
+            proc=subprocess.Popen(['uv','run','pywrangler','dev','--ip','127.0.0.1','--port','8790','--local-protocol','https'],cwd=BUNDLE,stdout=log,stderr=subprocess.STDOUT,env={**os.environ,'CI':'true','WRANGLER_SEND_METRICS':'false'})
             try:
                 with httpx.Client(base_url=BASE,verify=False,timeout=10,trust_env=False) as c:
                     ready=False

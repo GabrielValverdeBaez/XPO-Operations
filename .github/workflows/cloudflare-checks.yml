@@ -27,7 +27,7 @@ jobs:
       - run: python scripts/check_route.py
       - run: node --check static/app.js && node --check cloud_assets/login.js && node --check cloud_assets/cloud.js
       - name: Bundle without deployment
-        run: uv run pywrangler deploy --dry-run
+        run: cd dist/cloudflare && uv run pywrangler deploy --dry-run
       - name: Actual Python Worker and local D1 integration
         run: python scripts/smoke_cloudflare.py
       - uses: actions/upload-artifact@v4

@@ -236,7 +236,10 @@ def test_allowlisted_bundle_and_catalog_equivalence(bundle):
     for path in bundle:
         assert not path.endswith(('.xls','.xlsx','.sqlite3','.token'))
         assert 'template-audit' not in path
-    assert len(bundle)==18
+    assert len(bundle)==20
+    assert (root/'requirements.txt').exists()
+    assert not (root/'dist/cloudflare/requirements.txt').exists()
+    assert (root/'dist/cloudflare/pyproject.toml').exists()
     ns={};exec((root/'dist/cloudflare/loadstudio/_catalog.py').read_text(),ns)
     assert ns['AUDIT']['headers']==HEADERS
     catalog={k:[r[0] for r in rows if r and r[0] is not None] for k,rows in ns['AUDIT']['catalogs'].items()}

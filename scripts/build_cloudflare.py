@@ -26,6 +26,10 @@ def build():
     for name in ('__init__.py','api.py','auth.py','d1.py'):
         shutil.copyfile(ROOT/'cloud_adapter'/name,target/name)
     shutil.copyfile(ROOT/'worker.py',DEST/'worker.py')
+    shutil.copyfile(ROOT/'pyproject.toml',DEST/'pyproject.toml')
+    config=json.loads((ROOT/'wrangler.jsonc').read_text())
+    config['main']='worker.py';config['assets']['directory']='public'
+    (DEST/'wrangler.jsonc').write_text(json.dumps(config,indent=2)+'\n')
     public=DEST/'public';(public/'static').mkdir(parents=True)
     for name in ('style.css','app.js'):
         shutil.copyfile(ROOT/'static'/name,public/'static'/name)
