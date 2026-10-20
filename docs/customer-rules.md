@@ -7,7 +7,7 @@ Precedencia: dato actual confirmado > excepcion exacta de cliente > fallback doc
 | Caso | Implementacion y evidencia |
 |---|---|
 | Notas | SEB y centro DHL Ontigola: adelantar posicionamiento y matriculas. TCL: matriculas. Mattel: matriculas y conductor. Siempre despues de ambos precios; casos positivos/negativos probados. |
-| LG/LX Pantos grupaje | Solo falta peso: 2000 kg; solo falta ML: 5; ambos independientes; conservar valores presentes. Europales confirmados usan 0,40 m/unidad antes del fallback. No aplicar a FTL. |
+| LG/LX Pantos grupaje | Solo falta peso: 2000 kg; solo falta ML: 5; ambos independientes; conservar valores presentes. Dimensiones confirmadas prevalecen sobre europales (0,40 m/unidad) y sobre el fallback; nunca sobrescribir ML explicitos. No aplicar a FTL. |
 | Diversey Illescas | ADR y paletizado; carga 10-19 y dia siguiente 06 solo donde falta dato, sin sobrescribir hora explicita. ADR false explicito se conserva con advertencia de excepcion. |
 | Danone/L'Oreal | Aguas Danone y L'Oreal: ADR N y paletizado S. Danone Siguenza: ADR N, no inferir paletizado. Corregida la antigua anotacion del repositorio que dejaba ADR Siguenza desconocido. |
 | PEPCO | FTL 12 t / 13,6 m; horas de respaldo solo si faltan; datos actuales prevalecen. |
@@ -16,8 +16,11 @@ Precedencia: dato actual confirmado > excepcion exacta de cliente > fallback doc
 | Equipos | Tautliner standard se normaliza a Trailer + Tautliner. Sin Mega inventado. Un rigido no recibe Trailer por defecto. |
 | CP centros | XPO Leganes 28911, Ledono 15189, Arrubal 26150 y otros aliases exactos presentes en codigo; nunca reemplazar CP actual. |
 | Mercancia | Fallback solo para cliente confirmado y descripcion ausente; se mantiene una descripcion actual aunque no haya traduccion, exigiendo completarla. |
-| Norauto multientrega | **Pendiente**: no aplicar el patron Seseña-Logroño-Pamplona a cualquier ruta. Se bloquean >2 paradas; no inventar una ruta directa. |
-| Dimensiones y nuevos clientes | ML por dimensiones detalladas, nuevas reglas arbitrarias y todos los aliases secundarios de la Skill quedan pendientes de ampliar con pruebas; usar ML confirmado manualmente. |
+| Norauto multientrega | NT014, cliente exacto y recorrido confirmado Sesena - Logrono (o Arrubal/XPO) - Pamplona/Imarcoain: FTL 20 t, 13,6 m, ADR N y paletizado N solo si faltan. No aplicar a otra ruta, pais, accion o servicio. |
+| Dimensiones | Solo grupaje: suma(largo x ancho x cantidad)/2,40, redondeo a dos decimales. Exigir confirmacion de dimensiones. Un ML explicito se conserva; conflicto genera advertencia. Nunca calcular por dimensiones una FTL. |
+| Paradas intermedias | Conservar orden, accion, CP y fecha en texto y comentarios TSV. Validar numero y cronologia. Si los comentarios superan 500 caracteres, bloquear sin truncar paradas. |
+| Aliases secundarios | Centros PT y ES exactos, Burgos ciudad 09001 frente a XPO 09006, Carnaxide 2795 y Ontigola 45340. Fuente actual prevalece; contradiccion de pais y centro bloquea. |
+| Nuevos clientes | El editor modifica notas/switches conocidos, no crea reglas ejecutables arbitrarias. Las ampliaciones de clientes necesitan una regla documentada y pruebas. |
 
 ## Formato bloqueado por contrato
 

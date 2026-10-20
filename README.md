@@ -22,16 +22,16 @@ Abrir la URL que imprime el programa, incluido el fragmento `#token=...`. El ser
 
 ## Funciones implementadas
 
-FOTE completo y multiples ordenes separadas; formulario; texto con etiquetas y rutas con flecha; importacion XLSX con mapeo y deteccion de formulas; reglas exactas por cliente; texto enriquecido/Markdown; validacion TSV; historial SQLite con revisiones y duplicados; reglas con control de versiones y restauracion; backups; OCR local opcional; tarifas por corredor aportadas por el operador.
+FOTE completo y multiples ordenes separadas; formulario; texto con etiquetas y rutas con flecha; importacion XLSX con mapeo y deteccion de formulas; reglas exactas por cliente; paradas intermedias ordenadas; calculo de ML por dimensiones confirmadas; patron Norauto multientrega; texto enriquecido/Markdown; validacion TSV; historial SQLite con revisiones y duplicados; reglas con control de versiones y restauracion; backups; OCR local opcional; tarifas por corredor aportadas por el operador.
 
 ## Limites explicitos
 
 - Se requiere revision antes de copiar o guardar. Campos contradictorios bloquean la salida hasta corregirlos.
 - Texto libre significa gramatica acotada, no interpretacion universal. Sin ano, pais, CP o unidades suficientes se pide completar datos.
-- Rutas con mas de dos paradas se bloquean: no se convierten silenciosamente en rutas directas. El patron multientrega Norauto queda pendiente.
+- Rutas con paradas intermedias requieren el itinerario completo: accion, lugar y fecha de cada parada. Si faltan datos, no se convierten en rutas directas. El editor avanzado usa JSON revisable.
 - El importador general admite `.xlsx`, no cualquier BIFF/XLS. El lector BIFF8 incluido audita de forma acotada la plantilla original.
 - Editor de reglas: notas y activacion de reglas conocidas; no ejecuta codigo ni permite inventar clientes automaticamente.
-- No hay tarifas reales precargadas. Sin evidencia suficiente: `Por confirmar / To be confirmed`.
+- No hay tarifas reales precargadas ni se usa una tarifa directa para multientrega. Sin evidencia suficiente: `Por confirmar / To be confirmed`.
 - OCR necesita el ejecutable Tesseract local. Su confianza no es una garantia de exactitud de campos.
 - No se envia nada a FOTE ni Wtransnet. No hay agente de desarrollo persistente ejecutandose por instalar la app.
 

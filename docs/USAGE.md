@@ -62,3 +62,22 @@ Instalar Tesseract con las herramientas autorizadas del equipo. No es requisito 
 La instalacion real sigue pendiente: este trabajo no tiene una sesion SSH autenticada en tu Mac. Una vez instalado alli, mantener procesos largos en `tmux`, como exige la operativa del proyecto. No se configura Tailscale ni se abren puertos desde este repositorio.
 
 Opcion de despliegue a validar: tunel SSH sobre la red privada existente, manteniendo el servidor en loopback. El acceso mediante proxy/Tailscale Serve requiere revisar host permitido y HTTPS antes de activarlo; no esta configurado ni probado. No modificar reglas de red, cuentas o llaveros automaticamente.
+
+
+## Paradas y dimensiones - extension verificada
+
+En Campos adicionales, introducir las paradas intermedias como lista JSON en su orden real. El numero total se actualiza al editar la lista. Ejemplo sintetico de una descarga intermedia:
+
+```json
+[{"action":"DELIVERY","place":{"country":"ES","postcode":"26150","locality":"Logrono"},"window":{"date":"2026-10-21","start":"08:00","end":"09:00"}}]
+```
+
+La ruta debe incluir todas las paradas y fechas en orden; no se inventa el detalle a partir de una flecha o del contador FOTE. El texto conserva CP y horarios; TSV conserva origen/final y refleja cada parada en Comentarios. Comentarios de mas de 500 caracteres bloquean la salida sin recortarlos. No se aplica el motor de tarifas directas a una ruta con paradas.
+
+Para metraje dimensional de grupaje, introducir grupos de bultos en metros y confirmar las dimensiones:
+
+```json
+[{"length_m":"1.2","width_m":"0.8","quantity":7}]
+```
+
+Con ML vacios, este ejemplo produce 2,80 m. **Si ya hay ML explicitos, no se sobrescriben**: vaciar ese campo deliberadamente para calcular desde dimensiones. No usar esta conversion en FTL. No activar el fallback LG cuando hay dimensiones pendientes de confirmar. La edicion invalida la revision anterior y exige volver a revisar la salida.

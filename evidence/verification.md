@@ -31,3 +31,14 @@ Codigo, contratos y datos sinteticos unicamente. Original XLS, base de datos de 
 La primera ejecucion 39403520780 habia fallado en la espera del test del editor de reglas: el test usaba evaluacion de cadena que la CSP prohibia. Se sustituyo por una asercion del valor de un elemento; la CSP se conserva sin unsafe-eval. La repeticion completa pasa, incluidas copia y lectura del portapapeles, revision, guardar/no duplicar, reapertura de historial, versionado de reglas y viewport movil. El limite local de navegador no se eludio: GitHub Actions utilizo su propio runner autorizado.
 
 El CI acredita el codigo del commit indicado, no una aceptacion comercial ni un despliegue en el ordenador del usuario.
+
+
+## Extension de rutas y dimensiones - evidencia final
+
+Head `2bc1e582fe3fe402c41ff4054494aa697833e70c`, merge temporal CI `4401b47f958d8872a0c4778fb4e4548f449d2ef3`. [Run 39406835670](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39406835670), job 118574705486, **SUCCESS** el 20/10/2026, 10:17:08-10:18:01Z.
+
+**117 passed, 1 warning, 0 failures**; aviso de deprecacion en dependencia del cliente de tests, no error de prueba. Los 19 hashes de fuente coinciden. DAG y sintaxis JS pasan. Chromium 156.0.8078.4 completa los 17 controles del smoke conectado, incluyendo paradas intermedias, dimensiones, portapapeles, historial y revision. Artefacto sintetico 12257147782 contiene informe y vistas escritorio/movil.
+
+La ejecucion anterior 39406197839 paso los 117 tests y fallo en una expectativa incorrecta del smoke: esperaba 2,8 m sobre 13,6 m explicitos recuperados del historial. Se corrigio el test para comprobar que conserva 13,6 y vaciar el campo deliberadamente antes de calcular. No se modifico la regla de precedencia ni se rebajo la validacion. La repeticion completa pasa.
+
+T-006 cerrada tecnicamente. T-013 permanece REVIEW por datos reales de OCR/tarifas; T-008/T-014 siguen bloqueadas por aceptacion operativa/despliegue. Los cambios documentales posteriores no alteran el codigo probado.
