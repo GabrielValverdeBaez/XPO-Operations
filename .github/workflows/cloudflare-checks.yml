@@ -36,32 +36,10 @@ jobs:
           uv run pywrangler deploy --dry-run > /tmp/xpo-dry-run.log 2>&1 || { tail -50 /tmp/xpo-dry-run.log; exit 1; }
           echo 'PASS: Python Worker bundle dry-run (no deployment)'
       - name: Actual Python Worker and local D1 integration
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import subprocess
-          import sys
-          # Diagnostics are confined to this disposable localhost bundle, with
-          # synthetic data and no Cloudflare account credentials. Never deploy it.
-          target = Path('dist/cloudflare/cloud_adapter/api.py')
-          original = target.read_text()
-          marker = '                except Exception:\n                    # Provider errors'
-          diagnostic = ('                except Exception as exc:\n'
-                        '                    import traceback\n'
-                        "                    return JSONResponse({'detail': type(exc).__name__ + ': ' + str(exc), 'trace': traceback.format_exc()}, status_code=503)\n"
-                        '                    # Provider errors')
-          if original.count(marker) != 1:
-              raise SystemExit('D1 diagnostic insertion point changed; review required')
-          try:
-              target.write_text(original.replace(marker, diagnostic))
-              result = subprocess.run([sys.executable, 'scripts/smoke_cloudflare.py'])
-          finally:
-              target.write_text(original)
-          raise SystemExit(result.returncode)
-          PY
+        run: python scripts/smoke_cloudflare.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: cloudflare-runtime-evidence
           path: evidence/cloudflare-runtime.json
-          if-no-files-found: ignore
+          if-no-files-found: error
