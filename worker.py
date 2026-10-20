@@ -1,9 +1,5 @@
-"""Cloudflare entrypoint; runtime SDK is explicitly vendored for modern dates."""
-from workers import WorkerEntrypoint
+"""Cloudflare ASGI entrypoint with the explicitly vendored runtime SDK."""
+from workers import asgi
 from cloud_adapter.api import app
 
-
-class Default(WorkerEntrypoint):
-    async def fetch(self, request):
-        import asgi
-        return await asgi.fetch(app, request, self.env)
+Default = asgi.entrypoint(app)
