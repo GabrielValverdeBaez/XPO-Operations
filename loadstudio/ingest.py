@@ -131,13 +131,17 @@ LABELS={'REFERENCIA':'reference','REF':'reference','CLIENTE':'customer','CUSTOME
         'DESCARGA':'delivery','DELIVERY':'delivery','PESO':'weight_kg','WEIGHT':'weight_kg','ML':'linear_meters',
         'METROS':'linear_meters','VEHICULO':'vehicle','VEHICLE':'vehicle','SERVICIO':'service','SERVICE':'service',
         'PRECIO CLIENTE':'client_price_eur','CLIENT PRICE':'client_price_eur','MERCANCIA':'goods_es','GOODS':'goods_es','ADR':'adr',
-        'PALETIZADO':'palletized','PALETS':'pallets'}
+        'PALETIZADO':'palletized','PALETS':'pallets','PARADAS':'stop_count','STOPS':'stop_count'}
 
 def free_text(text):
     s=clean(text);data={};issues=[];seen={}
     def warn(f,m):issues.append({'field':f,'message':m,'severity':'warning'})
     route=re.search(r'(?m)^([^\n:]+?)\s*(?:->|\u2192)\s*([^\n]+)$',s)
-    if route:data['origin']=parse_place(route[1]);data['destination']=parse_place(route[2])
+    if route:
+        route_parts=re.split(r'(?:->|\u2192)',route[0])
+        data['origin']=parse_place(route_parts[0]);data['destination']=parse_place(route_parts[-1])
+        if len(route_parts)>2:
+            data['stop_count']=len(route_parts);warn('stop_count','Ruta con paradas intermedias: completar acciones, lugares y fechas antes de copiar')
     for line in re.split(r'[\n;]+',s):
         if not line.strip():continue
         pair=re.match(r'^\s*([^:]+):\s*(.*)$',line)
@@ -164,7 +168,7 @@ def free_text(text):
                 options={'FTL':'FTL','GRUPAJE':'GROUPAGE','GROUPAGE':'GROUPAGE','RIGID':'RIGID'}
                 if normalized(value) not in options:raise ValueError('Servicio no reconocido')
                 data[field]=options[normalized(value)]
-            elif field=='pallets':data[field]=int(value)
+            elif field in ('pallets','stop_count'):data[field]=int(value)
             elif field=='goods_es':
                 if '/' in value:data['goods_es'],data['goods_en']=[x.strip() for x in value.split('/',1)]
                 elif normalized(value) in GOODS:data['goods_es'],data['goods_en']=GOODS[normalized(value)]
@@ -197,9 +201,9 @@ def parse(text,mode='auto'):
 
 FIELD_MAP={'Referencia':'reference','Fecha disponibilidad':'pickup.date','Pa\u00eds origen':'origin.country','CP origen':'origin.postcode',
  'Localidad origen':'origin.locality','Pa\u00eds destino':'destination.country','CP destino':'destination.postcode','Localidad destino':'destination.locality',
- 'Tipo Bolsa':'service','Tipo Vehiculo':'vehicle','Peso':'weight_t','Largo':'linear_meters','Adr':'adr','Paletizado':'palletized'}
+ 'Tipo Bolsa':'service','Tipo Vehiculo':'vehicle','Paradas':'stop_count','Stops':'stop_count','Peso':'weight_t','Largo':'linear_meters','Adr':'adr','Paletizado':'palletized'}
 IMPORT_FIELDS={'reference','customer','origin.country','origin.postcode','origin.locality','origin.center','destination.country','destination.postcode','destination.locality',
- 'pickup.date','pickup.start','pickup.end','delivery.date','delivery.start','delivery.end','service','vehicle','weight_kg','weight_t','linear_meters','adr','palletized','goods_es','goods_en','client_price_eur'}
+ 'pickup.date','pickup.start','pickup.end','delivery.date','delivery.start','delivery.end','service','vehicle','weight_kg','weight_t','linear_meters','adr','palletized','goods_es','goods_en','client_price_eur','stop_count'}
 
 def workbook_preview(raw):
     if len(raw)>5_000_000:raise ValueError('Excel demasiado grande (maximo 5 MB)')
@@ -240,6 +244,10 @@ def import_rows(rows,mapping):
                 if field in ('weight_kg','weight_t','linear_meters','client_price_eur'):
                     value=numeric(value)
                     if field=='weight_t':field='weight_kg';value*=1000
+                elif field=='stop_count':
+                    value=numeric(value)
+                    if value!=value.to_integral_value():raise ValueError('Numero de paradas debe ser entero')
+                    value=int(value)
                 elif field in ('adr','palletized'):
                     if str(value).upper() not in ('S','N'):raise ValueError('S/N invalido')
                     value=str(value).upper()=='S'

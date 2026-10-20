@@ -9,6 +9,7 @@ import re
 import unicodedata
 from pathlib import Path
 from .models import Load, Issue, Rules, CorridorRate
+from .route_features import CENTER_CODES, PORTUGUESE_CENTERS, LOCALITY_CODES, route_places, dimension_meters, norauto_matches, route_issues
 
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = json.loads((ROOT/'evidence/template-audit.json').read_text(encoding='utf-8'))
@@ -46,12 +47,16 @@ def rule_apply(raw: Load, rules: Rules):
         if any(key==f or key.startswith(f+'.') for f in load.blocked_fields): return
         if value is not None and getattr(obj,attr) is None:
             setattr(obj,attr,value);provenance[key]={'source':'rule','rule_id':rule,'revision':rules.revision}
-    for label,p in [('origin',load.origin),('destination',load.destination)]:
+    for label,p in route_places(load):
         if p.country in COUNTRIES: p.country=COUNTRIES[p.country]
         if rules.enabled['centers']:
-            centers={'XPO LEGANES':'28911','XPO LEDONO':'15189','XPO ARRUBAL':'26150',
-                     'XPO PAMPLONA IMARCOAIN':'31119','XPO SANTURTZI':'48980','CELERITAS ALOVERA':'19208'}
-            fill(p,'postcode',centers.get(normalized(p.center)),label+'.postcode','center_exact')
+            center=normalized(p.center)
+            expected_country='Portugal' if center in PORTUGUESE_CENTERS else 'Espa\u00f1a'
+            if center in CENTER_CODES and p.country and p.country!=expected_country:
+                issues.append(Issue(field=label+'.country',message='Pais incompatible con el centro identificado: revisar la contradiccion',severity='error'))
+            else:
+                fill(p,'postcode',CENTER_CODES.get(center),label+'.postcode','center_exact')
+                fill(p,'postcode',LOCALITY_CODES.get((normalized(p.country),normalized(p.locality))),label+'.postcode','locality_confirmed_alias')
     codes={'T100':'FTL','TR014':'FTL','NTIE1':'FTL','NT214':'GROUPAGE'}
     fill(load,'service',codes.get(normalized(load.service_code)),'service','service_exact')
     if normalized(load.vehicle)=='TAUTLINER STANDARD': load.vehicle='Trailer';fill(load,'body','Tautliner','body','equipment_exact')
@@ -62,11 +67,21 @@ def rule_apply(raw: Load, rules: Rules):
         fill(load,'linear_meters',Decimal('13.6'),'linear_meters','ftl_length')
     if load.service_code=='NTIE1': fill(load,'weight_kg',Decimal('24000'),'weight_kg','ntie1_weight')
     cid=client_id(load.customer)
-    if load.service=='GROUPAGE' and load.euro_pallets_confirmed and load.pallets is not None:
+    if rules.enabled['norauto'] and norauto_matches(load,normalized):
+        for attr,value in [('service','FTL'),('weight_kg',Decimal('20000')),('linear_meters',Decimal('13.6')),('adr',False),('palletized',False)]:
+            fill(load,attr,value,attr,'norauto_exact_multidrop')
+    if load.service=='GROUPAGE' and load.packages:
+        calculated=dimension_meters(load)
+        if load.linear_meters is None:
+            if calculated is None:issues.append(Issue(field='dimensions_confirmed',message='Confirmar las dimensiones antes de calcular ML; no se sustituye por un fallback',severity='error'))
+            else:fill(load,'linear_meters',calculated,'linear_meters','confirmed_dimensions')
+        elif calculated is not None and load.linear_meters!=calculated:
+            issues.append(Issue(field='linear_meters',message='ML explicitos distintos del calculo por dimensiones: se conserva el dato actual para revision'))
+    if load.service=='GROUPAGE' and not load.packages and load.euro_pallets_confirmed and load.pallets is not None:
         fill(load,'linear_meters',Decimal(load.pallets)*Decimal('.40'),'linear_meters','euro_pallets')
     if cid=='LG' and load.service=='GROUPAGE' and rules.enabled['lg']:
         fill(load,'weight_kg',Decimal('2000'),'weight_kg','lg_weight_missing')
-        fill(load,'linear_meters',Decimal('5'),'linear_meters','lg_length_missing')
+        if not load.packages:fill(load,'linear_meters',Decimal('5'),'linear_meters','lg_length_missing')
     if cid=='DIVERSEY' and normalized(load.origin.locality)=='ILLESCAS' and rules.enabled['diversey']:
         if load.adr is False: issues.append(Issue(field='adr',message='Excepcion a Diversey ADR: revisar expresamente antes de copiar'))
         fill(load,'adr',True,'adr','diversey_adr');fill(load,'palletized',True,'palletized','diversey_palletized')
@@ -79,7 +94,7 @@ def rule_apply(raw: Load, rules: Rules):
     if cid in ('DANONE','LOREAL','DANONE_SIGUENZA') and rules.enabled['danone' if cid!='LOREAL' else 'loreal']:
         fill(load,'adr',False,'adr','client_nonadr')
         if cid!='DANONE_SIGUENZA': fill(load,'palletized',True,'palletized','client_palletized')
-    if cid=='PEPCO' and rules.enabled['pepco']:
+    if cid=='PEPCO' and rules.enabled['pepco'] and load.service in (None,'FTL'):
         fill(load,'service','FTL','service','pepco_ftl');fill(load,'weight_kg',Decimal(12000),'weight_kg','pepco_weight')
         fill(load,'linear_meters',Decimal('13.6'),'linear_meters','pepco_length')
         fill(load.pickup,'start',__import__('datetime').time(13),'pickup.start','pepco_time')
@@ -87,8 +102,7 @@ def rule_apply(raw: Load, rules: Rules):
         if load.delivery.start is None:
             fill(load.delivery,'start',__import__('datetime').time(11),'delivery.start','pepco_times')
             if load.delivery.start is not None:fill(load.delivery,'end',__import__('datetime').time(14),'delivery.end','pepco_times')
-    # Norauto multi-stop defaults require a route structure not yet implemented; no broad activation.
-    if cid=='NORAUTO' and load.service_code=='NT014': issues.append(Issue(field='service',message='Norauto NT014 con paradas: completar manualmente; no aplicar patron a cualquier ruta'))
+    if cid=='NORAUTO' and load.service_code=='NT014' and not norauto_matches(load,normalized): issues.append(Issue(field='service',message='Norauto NT014 no coincide con el itinerario confirmado: no se aplica el patron'))
     if rules.enabled['goods']:
         goods={'LG':('Electronica y electrodomesticos paletizados','Palletized electronics and household appliances'),
                'SEB':('Peque\u00f1os electrodom\u00e9sticos','Small household appliances'),'MANGO':('Ropa','Clothing'),
@@ -114,13 +128,12 @@ def validate(load: Load):
     for field in load.blocked_fields: error(field,'Conflicto de origen pendiente: corregir este campo manualmente')
     for field,value in [('reference',load.reference),('service',load.service),('pickup.date',load.pickup.date),('delivery.date',load.delivery.date),('goods_es',load.goods_es),('goods_en',load.goods_en)]:
         if value is None or value=='': error(field,'Campo necesario por confirmar')
-    for side in ('origin','destination'):
-        p=getattr(load,side)
+    for side,p in route_places(load):
         if p.country not in CATALOG['NombresPaises'] or p.country=='Pa\u00eds por defecto': error(side+'.country','Pais no confirmado o fuera de catalogo')
         if not p.locality or len(p.locality)>60: error(side+'.locality','Localidad necesaria, maximo 60 caracteres')
         pattern=r'[0-9]{5}' if p.country=='Espa\u00f1a' else r'[0-9]{4}(?:-[0-9]{3})?' if p.country=='Portugal' else r'.{2,12}'
         if not p.postcode or not re.fullmatch(pattern,p.postcode): error(side+'.postcode','Codigo postal ausente o incompatible con el pais')
-    if load.stop_count > 2: error('stop_count','Mas de dos paradas: flujo no soportado; no exportar como ruta directa')
+    issues.extend(route_issues(load))
     if load.vehicle not in CATALOG['NombresVehiculos']: error('vehicle','Vehiculo fuera del catalogo real')
     if load.service=='RIGID' and load.vehicle in ('Trailer','Trailer Mega'): error('vehicle','Un servicio rigido no se asigna a un trailer')
     if load.weight_kg is None or load.weight_kg<=0: error('weight_kg','Peso real por confirmar (no capacidad del camion)')
@@ -137,6 +150,7 @@ def flatten(d,prefix=''):
     for k,v in d.items():
         key=prefix+k
         if isinstance(v,dict):out.update(flatten(v,key+'.'))
+        elif isinstance(v,list):out.update(flatten({str(i):item for i,item in enumerate(v)},key+'.'))
         else:out[key]=v
     return out
 
@@ -155,6 +169,8 @@ def window(w):
     return result
 
 def estimate(load, rates):
+    # Corridor table describes direct routes; never price a multistop as direct.
+    if load.intermediate_stops or load.stop_count!=2:return None,[]
     if load.adr is None or not load.pickup.date or not load.weight_kg or not load.linear_meters: return None,[]
     matches=[]
     for r in rates:
@@ -176,7 +192,8 @@ def estimate(load, rates):
 def render(raw: Load, rules: Rules=DEFAULT_RULES, rates=(), reviewed=False):
     load,provenance,issues,note=rule_apply(raw,rules);issues+=validate(load)
     market,basis=estimate(load,rates)
-    header=f"{load.pickup.date.strftime('%d/%m/%Y') if load.pickup.date else 'Por confirmar'} \u2014 {(load.origin.locality or '?').upper()} \u2192 {(load.destination.locality or '?').upper()} \u2014 Ref.: {load.reference or '?'}"
+    route_title=' \u2192 '.join((p.locality or '?').upper() for _,p in route_places(load))
+    header=f"{load.pickup.date.strftime('%d/%m/%Y') if load.pickup.date else 'Por confirmar'} \u2014 {route_title} \u2014 Ref.: {load.reference or '?'}"
     types=[{'FTL':'FTL','GROUPAGE':'Grupaje / Groupage','RIGID':'Rigido completo / Full rigid'}.get(load.service,'Por confirmar'),load.vehicle or '',load.body or '']
     vehicle=' '.join(x for x in types[1:] if x)
     type_line=' \u00b7 '.join([types[0],vehicle]+([amount(load.weight_kg/1000)+' t'] if load.weight_kg is not None else [])+([amount(load.linear_meters)+' m'] if load.linear_meters is not None else [])+(['ADR'] if load.adr is True else [])+(['paletizado / palletized'] if load.palletized is True else []))
@@ -184,6 +201,11 @@ def render(raw: Load, rules: Rules=DEFAULT_RULES, rates=(), reviewed=False):
             ('Mercanc\u00eda','Goods',(load.goods_es or '?')+' / '+(load.goods_en or '?')),('Recogida','Pickup',window(load.pickup)),('Descarga','Delivery',window(load.delivery)),
             ('Precio cliente','Client price',amount(load.client_price_eur,2)+(' \u20ac' if load.client_price_eur is not None else '')),
             ('Precio mercado estimado','Estimated market price',amount(market)+(' \u20ac' if market is not None else ''))]
+    # Stops keep route order; only postcodes appear in their address fields.
+    if load.intermediate_stops:
+        fields[1:1]=[(f'Parada {i+1}',f'Stop {i+1}',stop.place.postcode or '?') for i,stop in enumerate(load.intermediate_stops)]
+        delivery_index=next(i for i,f in enumerate(fields) if f[1]=='Delivery')
+        fields[delivery_index:delivery_index]=[((f'Carga parada {i+1}' if stop.action=='PICKUP' else f'Descarga parada {i+1}'),(f'Stop {i+1} pickup' if stop.action=='PICKUP' else f'Stop {i+1} delivery'),window(stop.window)) for i,stop in enumerate(load.intermediate_stops)]
     def md_escape(v):return re.sub(r'([\\`*_{}\[\]<>])',r'\\\1',str(v))
     md='**'+md_escape(header)+'**\n'+'\n'.join(f'**{es}** / *{en}*: {md_escape(value)}' for es,en,value in fields)
     plain=header+'\n'+'\n'.join(f'{es} / {en}: {value}' for es,en,value in fields)
@@ -200,7 +222,13 @@ def render(raw: Load, rules: Rules=DEFAULT_RULES, rates=(), reviewed=False):
         if w.start:s+=(' de ' if w.end else ' a las ')+w.start.strftime('%H:%M')
         if w.end:s+=' a '+w.end.strftime('%H:%M')
         return s+'.'
-    row[23]=' '.join(filter(None,[comment('Carga',load.pickup),comment('Descarga',load.delivery)]))
+    intermediate_comments=[]
+    for i,stop in enumerate(load.intermediate_stops):
+        action='Carga' if stop.action=='PICKUP' else 'Descarga'
+        label=f'Parada {i+1} {action} {stop.place.postcode or "?"} {stop.place.locality or "?"}'
+        intermediate_comments.append(comment(label,stop.window))
+    row[23]=' '.join(filter(None,[comment('Carga',load.pickup),*intermediate_comments,comment('Descarga',load.delivery)]))
+    if len(row[23])>500:issues.append(Issue(field='intermediate_stops',message='Comentarios superan 500 caracteres; no se truncan paradas',severity='error'))
     row[24]=''
     can_export=reviewed and not any(i.severity=='error' for i in issues)
     fingerprint=hashlib.sha256(json.dumps(load.model_dump(mode='json',exclude={'source_hash'}),sort_keys=True,ensure_ascii=True).encode()).hexdigest()

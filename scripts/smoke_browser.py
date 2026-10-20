@@ -61,13 +61,26 @@ def main():
                 page.locator('#rules-json').fill(json.dumps(rules));page.click('#save-rules')
                 expect(page.locator('#notice')).to_contain_text('nueva revision')
                 page.click('[data-tab="prepare"]');page.check('#reviewed');expect(page.locator('#result-status')).to_have_text('REVISADO')
+                page.locator('summary').filter(has_text='Campos adicionales').click()
+                intermediate=[{'action':'DELIVERY','place':{'country':'ES','postcode':'26150','locality':'Logrono'},'window':{'date':'2026-10-21','start':'08:00','end':'09:00'}}]
+                page.locator('#stops-json').fill(json.dumps(intermediate))
+                expect(page.locator('[data-path="stop_count"]')).to_have_value('3')
+                expect(page.locator('#copy-tsv')).to_be_disabled()
+                page.check('#reviewed');expect(page.locator('#result-status')).to_have_text('REVISADO')
+                assert 'Parada 1' in page.locator('#rich-output').inner_text()
+                assert 'Logrono' in page.locator('#tsv-output').input_value()
+                page.locator('[data-path="service"]').select_option('GROUPAGE')
+                page.locator('#packages-json').fill(json.dumps([{'length_m':'1.2','width_m':'.8','quantity':7}]))
+                page.locator('[data-path="dimensions_confirmed"]').select_option('S')
+                page.check('#reviewed');expect(page.locator('#result-status')).to_have_text('REVISADO')
+                assert page.locator('#tsv-output').input_value().split('\t')[12]=='2,8'
                 page.locator('.results').scroll_into_view_if_needed()
                 page.screenshot(path=str(ROOT/'evidence/ui-desktop.png'),full_page=True)
                 page.set_viewport_size({'width':390,'height':844})
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
                 page.screenshot(path=str(ROOT/'evidence/ui-mobile.png'),full_page=True)
                 assert not errors,errors
-                report={'status':'PASS','browser':browser.version,'checks':['server startup','token session','free text import','manual draft review','26 TSV cells','Y empty','PT postcode conversion','bold label boundary','clipboard trailing tabs','save and duplicate detection','edit invalidates review','history reopens draft','rule version update','mobile overflow','no JavaScript page errors'],'synthetic_data_only':True}
+                report={'status':'PASS','browser':browser.version,'checks':['server startup','token session','free text import','manual draft review','26 TSV cells','Y empty','PT postcode conversion','bold label boundary','clipboard trailing tabs','save and duplicate detection','edit invalidates review','history reopens draft','rule version update','intermediate stops editor and output','dimensions metrage editor and output','mobile overflow','no JavaScript page errors'],'synthetic_data_only':True}
                 (ROOT/'evidence/browser-smoke.json').write_text(json.dumps(report,indent=2)+'\n')
                 print(json.dumps(report,indent=2));browser.close()
         finally:

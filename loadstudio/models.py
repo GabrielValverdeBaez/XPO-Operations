@@ -28,6 +28,26 @@ class Window(Model):
             raise ValueError('Ventana nocturna: separar fechas, no invertir horas')
         return self
 
+class IntermediateStop(Model):
+    action: Literal['PICKUP', 'DELIVERY']
+    place: Place = Field(default_factory=Place)
+    window: Window = Field(default_factory=Window)
+
+class PackageDimensions(Model):
+    length_m: Decimal = Field(gt=0, le=30)
+    width_m: Decimal = Field(gt=0, le=5)
+    quantity: int = Field(ge=1, le=2000)
+
+    @field_validator('length_m', 'width_m')
+    @classmethod
+    def finite_dimensions(cls, value):
+        if not value.is_finite(): raise ValueError('Dimension no finita')
+        return value.normalize()
+
+    @field_serializer('length_m', 'width_m', when_used='json')
+    def dimension_decimal(self, value):
+        return format(value, 'f')
+
 class Load(Model):
     reference: str | None = Field(default=None, max_length=64)
     customer: str | None = Field(default=None, max_length=160)
@@ -53,6 +73,9 @@ class Load(Model):
     options: dict[str, StrictBool | None] = Field(default_factory=dict)
     blocked_fields: list[str] = Field(default_factory=list, max_length=50)
     stop_count: int = Field(default=2, ge=2, le=20)
+    intermediate_stops: list[IntermediateStop] = Field(default_factory=list, max_length=18)
+    packages: list[PackageDimensions] = Field(default_factory=list, max_length=100)
+    dimensions_confirmed: StrictBool = False
     source_hash: str | None = None
 
     @field_validator('weight_kg','linear_meters','client_price_eur','distance_km')
