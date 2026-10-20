@@ -1,4 +1,8 @@
-"""Entry point copied by build_cloudflare.py into the isolated deployment bundle."""
-from workers import asgi
+"""Explicit ASGI entrypoint supported by the deployed Workers runtime SDK."""
+from workers import WorkerEntrypoint, asgi
 from cloud_adapter.api import app
-Default = asgi.entrypoint(app)
+
+
+class Default(WorkerEntrypoint):
+    async def fetch(self, request):
+        return await asgi.fetch(app, request, self.env)
