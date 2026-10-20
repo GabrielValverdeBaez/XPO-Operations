@@ -58,3 +58,10 @@
 **Fuente primaria ausente:** plantilla XLSX Wtransnet en vigor. Falta comprobar lista de validación de celdas, celdas opcionales, forma de pegar, orden final de columnas y diferencias de versión. La evidencia de estas reglas procede de la Skill XPO de trabajo, no de una inspección del XLSX original.
 
 **Para cerrar:** adjuntar plantilla (sin datos sensibles) y cinco o más muestras anonimizadas con salida aceptada; registrar diferencias antes de congelar versión 1.0.
+
+
+## Auditoría del XLS recibido (20/10/2026)
+
+Se inspeccionó la estructura del archivo binario XLS proporcionado por el usuario sin publicarlo en GitHub. La primera fila de `Ofertas` confirma exactamente los 26 encabezados A:Z enumerados arriba. La hoja también contiene once columnas auxiliares AA:AK, que no deben rellenarse al generar las ofertas. Existen hojas auxiliares `Paises`, `Especialidades`, `Vehículos`, `Otras listas`, `Horas` y `Vigencia`. Los tres valores documentados de Tipo Bolsa coinciden con los del libro.
+
+**Verificado:** nombres y orden A:Z; presencia de hojas y columnas auxiliares. **Pendiente:** auditoría completa de las restricciones de validación y comparación de muestras aceptadas antes del cierre de T-001.
