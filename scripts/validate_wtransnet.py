@@ -5,6 +5,7 @@ Uso: python3 scripts/validate_wtransnet.py ruta/al/archivo.tsv
 No edita archivos ni accede a servicios. No equivale a validar contra el XLSX real.
 """
 import csv
+from datetime import datetime
 import re
 import sys
 from pathlib import Path
@@ -21,8 +22,12 @@ def errors_for_row(row, row_number):
         return [f"fila {row_number}: {len(row)} columnas; esperadas {EXPECTED}"]
     if row[24] != "":
         errors.append(f"fila {row_number}: columna Y/Precio debe estar vacía")
-    if not re.fullmatch(r"\d{2}/\d{2}/\d{4}", row[1]):
-        errors.append(f"fila {row_number}: fecha B no cumple DD/MM/AAAA")
+    try:
+        if not re.fullmatch(r"\d{2}/\d{2}/\d{4}", row[1]):
+            raise ValueError("format")
+        datetime.strptime(row[1], "%d/%m/%Y")
+    except ValueError:
+        errors.append(f"fila {row_number}: fecha B inválida")
     if row[8] not in BOLSAS:
         errors.append(f"fila {row_number}: I/Tipo Bolsa no reconocido")
     if row[9] not in VEHICULOS:
@@ -45,10 +50,16 @@ def errors_for_row(row, row_number):
 
 def main(path):
     failures = []
+    count = 0
     with Path(path).open(encoding="utf-8-sig", newline="") as source:
         rows = csv.reader(source, delimiter="\t")
         for n, row in enumerate(rows, 1):
+            count += 1
             failures.extend(errors_for_row(row, n))
+    if count == 0:
+        failures.append("archivo vacío")
+    if count > 50:
+        failures.append("máximo 50 ofertas por lote")
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1
