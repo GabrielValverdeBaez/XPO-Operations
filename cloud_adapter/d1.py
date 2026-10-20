@@ -11,14 +11,14 @@ def dump(obj):
 
 
 def native(obj):
-    """Decode JSON-valued binding responses, including non-plain JS objects.
+    """Accept SDK-converted values before decoding genuinely raw JS results.
 
-    JsProxy.to_py() can leave host objects unchanged. Calling dict methods
-    on that proxy then fails in workerd although native test doubles pass.
-    JSON materialization is explicit here: use only for binding RESULTS,
-    never for statements, buffers, credentials or callable bindings.
+    workers-runtime-sdk returns JsDict, a dict subclass. Sending that Python
+    object back through JS JSON.stringify loses its fields (including success).
+    Raw JS host results still need JSON materialization. Never use this helper
+    for statements, buffers, credentials or callable bindings.
     """
-    if obj is None or type(obj) in (dict, list, str, int, float, bool):
+    if obj is None or isinstance(obj, (dict, list, str, int, float, bool)):
         return obj
     from js import JSON
     encoded = JSON.stringify(obj)
@@ -28,11 +28,13 @@ def native(obj):
 
 
 def js_array(values):
-    try:
-        from pyodide.ffi import to_js
-    except ImportError:
-        return values  # Native tests use the same SQL with a SQLite binding double.
-    return to_js(values)
+    """Keep Python statement wrappers alive for the SDK's RPC conversion.
+
+    The pinned SDK unwraps every statement through python_to_rpc. Applying
+    pyodide.to_js ourselves creates borrowed PyProxy objects instead, which
+    may be destroyed before the asynchronous D1 batch consumes them.
+    """
+    return values
 
 
 SCHEMA = [
