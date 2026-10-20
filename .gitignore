@@ -13,3 +13,10 @@ session.token
 private/
 dist/
 # Only synthetic visual evidence may be explicitly force-added after review.
+# Cloudflare/Python Worker artifacts and local secrets
+node_modules/
+.wrangler/
+.dev.vars*
+.env*
+.python_packages/
+.venv-cloud/

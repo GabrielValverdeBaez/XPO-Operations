@@ -1,0 +1,11 @@
+{
+  "name": "xpo-load-studio",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "build": "python scripts/build_cloudflare.py",
+    "deploy": "uv run pywrangler deploy",
+    "dev:cloudflare": "uv run pywrangler dev"
+  },
+  "devDependencies": {"wrangler": "^4.64.0"}
+}

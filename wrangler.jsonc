@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "xpo-load-studio",
+  "main": "dist/cloudflare/worker.py",
+  "compatibility_date": "2026-10-20",
+  "compatibility_flags": ["python_workers"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "dist/cloudflare/public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+  "d1_databases": [{"binding": "DB", "database_name": "xpo-load-studio-db"}],
+  "ratelimits": [{
+    "name": "LOGIN_LIMITER",
+    "namespace_id": "1200261020",
+    "simple": {"limit": 5, "period": 60}
+  }],
+  "observability": {"enabled": false}
+}
