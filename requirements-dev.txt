@@ -1,0 +1,5 @@
+-r requirements.txt
+pytest>=9,<10
+httpx>=0.28,<1
+PyYAML>=6,<7
+playwright>=1.57,<2

@@ -1,74 +1,59 @@
 #!/usr/bin/env python3
-"""Validador provisional de filas TSV Wtransnet A:Z. Solo biblioteca estándar.
-
-Uso: python3 scripts/validate_wtransnet.py ruta/al/archivo.tsv
-No edita archivos ni accede a servicios. No equivale a validar contra el XLSX real.
-"""
-import csv
+"""Validate the inspected template plus explicit XPO output policies; never edits XLS."""
 from datetime import datetime
+import json
+from pathlib import Path
 import re
 import sys
-from pathlib import Path
 
-EXPECTED = 26
-BOOLEAN_COLS = (13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25)
-BOLSAS = {"Grupajes", "Rígidos Completos", "Tráilers Completos"}
-VEHICULOS = {"Trailer", "Trailer Mega", "Camión Remolque", "Camión 3 ejes", "Camión 4 ejes", "Camión 2 ejes > 7,5 T. MMA", "Furgonetas"}
+AUDIT=json.loads((Path(__file__).resolve().parents[1]/'evidence/template-audit.json').read_text(encoding='utf-8'))
+CAT={k:{r[0] for r in v if r and r[0] is not None} for k,v in AUDIT['catalogs'].items()}
+EXPECTED=26
+BOOLEAN_COLS=(*range(13,23),25)
+BOLSAS=CAT['NombresTiposBolsa']
+VEHICULOS=CAT['NombresVehiculos']
 
-
-def errors_for_row(row, row_number):
-    errors = []
-    if len(row) != EXPECTED:
-        return [f"fila {row_number}: {len(row)} columnas; esperadas {EXPECTED}"]
-    if row[24] != "":
-        errors.append(f"fila {row_number}: columna Y/Precio debe estar vacía")
+def errors_for_row(row,row_number):
+    prefix=f'fila {row_number}: '
+    if len(row)!=26:return [prefix+f'{len(row)} columnas; esperadas 26']
+    errors=[]
+    def error(s):errors.append(prefix+s)
+    if any(not isinstance(v,str) for v in row):return [prefix+'Todos los campos deben ser texto']
+    for pos,v in enumerate(row):
+        if any(c in v for c in '\r\n\t\x00'):error(f'control incrustado en columna {pos+1}')
+        if v.lstrip().startswith(('=','+','-','@')):error(f'formula/prefijo peligroso en columna {pos+1}')
+    if not row[0]:error('Referencia obligatoria en el flujo XPO')
+    if row[24]!='':error('columna Y/Precio debe estar vacia')
     try:
-        if not re.fullmatch(r"\d{2}/\d{2}/\d{4}", row[1]):
-            raise ValueError("format")
-        datetime.strptime(row[1], "%d/%m/%Y")
-    except ValueError:
-        errors.append(f"fila {row_number}: fecha B inválida")
-    if row[8] not in BOLSAS:
-        errors.append(f"fila {row_number}: I/Tipo Bolsa no reconocido")
-    if row[9] not in VEHICULOS:
-        errors.append(f"fila {row_number}: J/Tipo Vehículo no reconocido")
+        if not re.fullmatch(r'[0-9]{2}/[0-9]{2}/[0-9]{4}',row[1]):raise ValueError()
+        datetime.strptime(row[1],'%d/%m/%Y')
+    except ValueError:error('Fecha B invalida')
+    for col,catalog in [(2,'NombresPaises'),(5,'NombresPaises'),(8,'NombresTiposBolsa'),(9,'NombresVehiculos'),(10,'NombresEspecialidades')]:
+        if row[col] not in CAT[catalog]:error(f'columna {col+1}: fuera de catalogo real')
+    if row[10]!='Carga General':error('K debe ser Carga General por politica XPO')
     for pos in BOOLEAN_COLS:
-        if row[pos] not in ("S", "N", ""):
-            errors.append(f"fila {row_number}: {chr(65+pos)} admite solo S/N/vacío")
-    for country_pos, cp_pos in ((2,3),(5,6)):
-        country, cp = row[country_pos], row[cp_pos]
-        regex = r"\d{5}" if country == "España" else r"\d{4}" if country == "Portugal" else None
-        if regex and not re.fullmatch(regex, cp):
-            errors.append(f"fila {row_number}: CP inválido para {country}")
-    if len(row[23]) > 500:
-        errors.append(f"fila {row_number}: X/Comentarios supera 500 caracteres")
-    for pos in (11, 12):
-        if row[pos] and not re.fullmatch(r"\d+(,\d+)?", row[pos]):
-            errors.append(f"fila {row_number}: {chr(65+pos)} debe ser número no negativo con coma")
+        if row[pos] not in ('S','N',''):error(f'columna {pos+1}: solo S/N/vacio')
+    for country,cp,city in ((2,3,4),(5,6,7)):
+        pattern=r'[0-9]{5}' if row[country]=='Espa\u00f1a' else r'[0-9]{4}' if row[country]=='Portugal' else r'.{2,12}'
+        if not re.fullmatch(pattern,row[cp]):error('CP invalido')
+        if not row[city] or len(row[city])>60:error('Localidad necesaria y maximo 60 caracteres')
+    for pos in (11,12):
+        if row[pos] and not re.fullmatch(r'[0-9]+(?:,[0-9]+)?',row[pos]):error('Peso/largo: numero no negativo con coma')
+    if len(row[23])>500:error('Comentarios: maximo 500 por politica XPO')
     return errors
 
-
 def main(path):
-    failures = []
-    count = 0
-    with Path(path).open(encoding="utf-8-sig", newline="") as source:
-        rows = csv.reader(source, delimiter="\t")
-        for n, row in enumerate(rows, 1):
-            count += 1
-            failures.extend(errors_for_row(row, n))
-    if count == 0:
-        failures.append("archivo vacío")
-    if count > 50:
-        failures.append("máximo 50 ofertas por lote")
-    if failures:
-        print("\n".join(failures), file=sys.stderr)
-        return 1
-    print("PASS: estructura y valores preliminares coherentes (no auditado contra plantilla oficial)")
+    try:raw=Path(path).read_text(encoding='utf-8-sig')
+    except (OSError,UnicodeError) as e:print(str(e),file=sys.stderr);return 2
+    rows=raw.splitlines();errors=[]
+    if not rows:errors.append('archivo vacio')
+    if len(rows)>50:errors.append('maximo 50 ofertas por lote')
+    for n,line in enumerate(rows,1):errors.extend(errors_for_row(line.split('\t'),n))
+    if errors:print('\n'.join(errors),file=sys.stderr);return 1
+    if len(rows)>38:print('AVISO: el XLS suministrado solo tiene DV hasta la fila 39; dividir el pegado en lotes de 38.',file=sys.stderr)
+    print('PASS: contrato XLS inspeccionado + reglas XPO; no prueba aceptacion por el servicio Wtransnet')
     return 0
 
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Uso: python3 scripts/validate_wtransnet.py archivo.tsv", file=sys.stderr)
-        sys.exit(2)
+if __name__=='__main__':
+    if len(sys.argv)!=2:print('Uso: python scripts/validate_wtransnet.py archivo.tsv',file=sys.stderr);sys.exit(2)
     sys.exit(main(sys.argv[1]))

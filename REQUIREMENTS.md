@@ -1,57 +1,27 @@
-# XPO Load Studio — Requisitos y reglas v0.1
+# XPO Load Studio - Contrato de desarrollo 0.1
 
-> Documento inicial derivado de reglas operativas existentes. Toda correspondencia con el Excel oficial y cualquier diferencia por cliente debe verificarse antes de codificar.
+## Modelo canonico
 
-## Proceso funcional
-1. Ingestar orden FOTE pegada o formulario.
-2. Identificar campos y guardar valor, fuente, confianza y estado confirmado.
-3. Normalizar a `LoadRecord` sin sobrescribir valores confirmados.
-4. Resolver cliente, equipo y excepciones mediante reglas versionadas.
-5. Validar requisitos y pedir solo los datos que falten o sean conflictivos.
-6. Previsualizar y copiar texto ES/EN y TSV de 26 columnas.
-7. Registrar un snapshot y detectar duplicados por referencia y huella normalizada.
+`loadstudio/models.py`: Load, Place, Window, Rules, CorridorRate. Esquema tipado Pydantic; errores para campos extra, fechas imposibles, ventanas invertidas, numeros no finitos, servicio no reconocido y opcion desconocida. Desconocido es null, distinto de false y cero. Peso interno kg; ML metros; importes Decimal. Fechas completas con ano; horas locales de cada centro, sin conversion de zona silenciosa. Ventanas que cruzan medianoche no se adivinan.
 
-## Modelo de datos inicial (provisional)
-`source_type, source_text_hash, order_reference, customer, origin_postcode, origin_locality, destination_postcode, destination_locality, pickup_start, pickup_end, delivery_start, delivery_end, equipment, operation_type, goods_es, goods_en, weight_kg, pallets, linear_meters, adr, client_price_eur, estimated_market_price_eur, market_price_basis, notes, field_provenance, rule_version, validation_status`.
+Entradas: FOTE, formulario, texto con etiquetas, XLSX mapeado y OCR local opcional. Todas pasan por Load -> motor determinista -> validacion -> render. Fuente raw solo en memoria; hash y datos normalizados en la instantanea. Se conservan procedencia de campos de entrada/reglas y bloqueos de conflictos. No se asignan porcentajes inventados de confianza a los parsers.
 
-Fechas con año, zona horaria explícita y ventanas; importes como decimales; unidades sin ambigüedad. Separar valor desconocido de cero o false.
+## Texto y TSV
 
-## Formato XPO ES/EN obligatorio
-- Encabezado con ruta completa **en negrita**, localidades permitidas en encabezado.
-- Etiquetas españolas **en negrita**, etiquetas inglesas *en cursiva*, valores sin estilo.
-- Campos: **Origen** / *Origin*, **Destino** / *Destination*, **Tipo** / *Type*, **Mercancía** / *Goods*, **Recogida** / *Pickup*, **Descarga** / *Delivery*, **Precio cliente** / *Client price*, **Precio mercado estimado** / *Estimated market price*.
-- En los valores de Origen/Destino SOLO CP; sin nombre de centro, empresa, dirección ni localidad. ES 5 dígitos; PT CP completo con guion cuando conste.
-- Tipo: forma directa `FTL · ...` o tipo operativo verificado. Regla por defecto: tráiler + tautliner + carga general cuando no contradiga datos o cliente.
-- Precio cliente y mercado independientes y al final, antes de notas específicas.
-- No agregar notas genéricas a otros clientes.
-- Notas particulares: Groupe SEB / DHL Ontígola adelantar posicionamiento e indicar matrículas; TCL indicar matrículas; Mattel indicar matrículas y conductor. Solo si corresponde el cliente.
-- Diversey: ADR por defecto bajo regla de cliente; excepción requiere confirmación y señalamiento. Otros clientes: ADR únicamente si está indicado/confirmado.
-- No completar mercancía, matrícula, conductor, horas, CP, pallets o precio con suposiciones.
+Contrato exacto en `docs/customer-rules.md` y `docs/wtransnet-schema.md`. Solo etiquetas espanolas en negrita, inglesas en cursiva, valores normales. Encabezado negrita; CP solo en Origen/Destino del cuerpo. Dos precios; notas particulares despues de ellos. El precio de mercado tiene fuentes separadas del ingreso y por defecto esta pendiente.
 
-## Wtransnet
-- **26 columnas** en orden exacto y codificación acordada con plantilla real. Orden y nombres AÚN PENDIENTES de inspeccionar.
-- Exportación TSV para pegar manualmente: sin editar plantillas, sin automatización de envío.
-- Validar caracteres que rompan TSV, número de celdas, tipos, códigos postales y campos obligatorios; generar pruebas de ida/vuelta.
-- Mantener mapeo versionado entre `LoadRecord` y las 26 columnas; registrar huecos y errores.
+26 columnas reales A:Z contrastadas con BIFF8. Catologos y 12 DV en `evidence/template-audit.json`; las politicas mas estrictas de XPO se distinguen de la validacion del libro. El generador no modifica plantillas ni escribe AA:AK ni envia a Wtransnet. Y vacia siempre. Horarios en X; CP portugues reducido solo en TSV.
 
-## Parsers
-- MVP: extractores FOTE específicos + formulario manual.
-- Fase posterior: abreviaturas con reglas transparentes y Excel con selección de columnas; OCR local Tesseract con revisión de baja confianza.
-- Cuando el parseo sea ambiguo, pedir confirmación; preservar texto original y explicabilidad del parser.
+## Revision y seguridad
 
-## Precios
-- `client_price_eur`: solo del input o introducción manual.
-- `estimated_market_price_eur`: estimación independiente a partir de corredores/rangos históricos verificables, condiciones del servicio y versión de tabla; no deducir del precio cliente.
-- Si falta evidencia adecuada, devolver «Pendiente de validar» en vez de número inventado.
+Un borrador puede mostrar vista previa, pero copiar o guardar requiere revision y ausencia de errores criticos. Edicion posterior invalida el resultado, incluidas respuestas de red antiguas. Contradicciones no se transforman en defaults. ADR no informado no significa N. Errores de traduccion o identificacion se completan manualmente.
 
-## UI y operación
-- Pegar FOTE / Texto libre (fase 2) / Manual / Importar Excel (fase 2) / Captura (fase 3).
-- Tarjeta de revisión editable con alertas y bloqueos donde correspondan.
-- Dos paneles de resultado, copiar texto enriquecido o plano según canal y TSV exacto.
-- Historial y deduplicación en fase 3, almacenamiento SQLite con backups.
-- Acceso privado por Tailscale con autenticación adecuada; no abrir puerto público.
+Solo loopback; token aleatorio local; comprobacion de Host/Origin; sin CORS abierto; CSP y escape HTML; bloqueo de formulas en TSV/XLSX; limites de archivos; no macros; directorio de datos privado. Sin llamadas de IA, telemetria, contactos a terceros ni puertos publicos.
 
-## Pruebas
-- Fixtures sintéticos o anonimizados para FOTE, ES→PT, PT→ES, ADR, ventanas, grupos, duplicados, conflicto de reglas, valores ausentes y caracteres especiales.
-- Golden tests del formato ES/EN y TSV; pruebas de invariantes (mismo registro+reglas = misma salida).
-- No liberar el MVP sin revisión humana de ejemplos operativos.
+## Persistencia y tarifas
+
+SQLite version1, instantaneas inmutables, dedupe semantica y revisiones relacionadas, control de revision de reglas, restauracion como version nueva y backup consistente. No degradar una base de version futura. Tabla de corredores con fuente y vigencia, sin precios reales precargados ni cotizaciones inferidas del cliente.
+
+## Criterio de liberacion
+
+Tests unitarios y API no sustituyen la prueba completa de navegador/portapapeles, pegado aceptado en Wtransnet, cinco ejemplos operativos y aceptacion humana. OCR sobre una imagen sintetica no acredita exactitud general. No anunciar la app desplegada en el Mac mini sin sesion e inspeccion reales. Las limitaciones enumeradas en README y ROUTE siguen siendo trabajo pendiente.

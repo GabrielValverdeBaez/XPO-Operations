@@ -1,0 +1,19 @@
+{
+  "loadstudio/__init__.py": "d5b5b1677c6ef96529a783c87ff65b36c61bf940f1c050290e6167d3bd53148e",
+  "loadstudio/app.py": "cbc13cc4574ba58866722c15708a3a53c746c3cf3eac50756cbbcf2cbaeccedb",
+  "loadstudio/engine.py": "1df9647e7205570a199b075fa6d94e3d09438c60d694b926860257cd8f8071ca",
+  "loadstudio/ingest.py": "ce2609ef431589a32610f08ebeed8cd0a39faf9569ff42c82437a04531e36b55",
+  "loadstudio/models.py": "1fa1a5148b645c0358d8dae09d951b4514efcb4745357803c2a97b538c780ec5",
+  "loadstudio/store.py": "ad8ca49f879e4fb2b1df583f6992fb0c0dded28aea15c75b03dce17d10890ee2",
+  "scripts/audit_xls.py": "825ad3be54799cf413ab4f2c95fcb6dafe38fe978935b9d7ddb764606c48f4a4",
+  "scripts/check_route.py": "9069dc7830b365af922c4a0a2a8491c6531430c709389e0fd5f145d632157fd3",
+  "scripts/run_local.py": "afe479ae2f444520ecd0bee7447cd1ceb026f397db78c104d0335940d625f815",
+  "scripts/smoke_browser.py": "6ab42facb70b057ddc48a50ec20e8d0dc3bd3f777364c4dc5d7096dd137dca47",
+  "scripts/smoke_ocr.py": "8efaccb8d28e4d5f583e87dbfddf42ec590d9544e3ffad23960e0bc0d2bcd6db",
+  "scripts/validate_wtransnet.py": "b9e916fd3ba16a46000d040412e0cac1dff7d84a873d9225819c9fe2a5a6cd3b",
+  "scripts/visual_smoke.py": "ab1dce7c6f010afcf3bd412b517fc8707017da1dd3b348056073f94dab8e3651",
+  "static/app.js": "04dd44cdfbfec3264656b21fcba565dd7bd00da8bdd446a592593af0676300ad",
+  "static/index.html": "1add138d2a25adeaa2a8fb6e05ee2673298498823227d03d590ff096c2a07504",
+  "static/style.css": "1e925c2381ea68b32c611b807f439d1c6f396b32c1b687d0f10916ef338bbec5",
+  "tests/test_studio.py": "6aee22c320a8daff679dd5a7deb237a7616eb940ded3dd37e177bd03348230b8"
+}

@@ -1,0 +1,59 @@
+'use strict';
+const $=s=>document.querySelector(s);
+const params=new URLSearchParams(location.hash.slice(1));
+if(params.get('token')){sessionStorage.setItem('xpo-token',params.get('token'));history.replaceState(null,'',location.pathname);}
+const token=()=>sessionStorage.getItem('xpo-token')||'';
+let config=null,drafts=[],current={},result=null,sheets=[],rulesRevision=1,draftVersion=0,previewSerial=0;
+const fields=[['reference','Referencia'],['customer','Cliente'],['origin.country','Pais origen','country'],['destination.country','Pais destino','country'],['origin.postcode','CP origen'],['destination.postcode','CP destino'],['origin.locality','Localidad origen'],['destination.locality','Localidad destino'],['pickup.date','Fecha recogida','date'],['delivery.date','Fecha descarga','date'],['pickup.start','Recogida desde','time'],['pickup.end','Recogida hasta','time'],['delivery.start','Descarga desde','time'],['delivery.end','Descarga hasta','time'],['service','Servicio','service'],['vehicle','Vehiculo','vehicle'],['weight_kg','Peso (kg)','number'],['linear_meters','Metros lineales','number'],['goods_es','Mercancia (ES)'],['goods_en','Mercancia (EN)'],['adr','ADR','bool'],['palletized','Paletizado','bool'],['client_price_eur','Precio cliente (EUR)','number']];
+const extra=[['origin.center','Centro origen confirmado'],['destination.center','Centro destino'],['body','Carroceria'],['service_code','Codigo servicio'],['pallets','Numero de pales','number'],['distance_km','Distancia contrastada (km)','number'],['stop_count','Numero de paradas','number']];
+function notice(text,error=false){$('#notice').textContent=text;$('#notice').className=error?'error':'';}
+async function api(path,data,method='POST'){
+ const options={method:data===undefined?'GET':method,headers:{'X-XPO-Token':token()}};
+ if(data instanceof FormData)options.body=data;else if(data!==undefined){options.headers['Content-Type']='application/json';options.body=JSON.stringify(data);}
+ const r=await fetch('/api/'+path,options);const body=await r.json();if(!r.ok)throw new Error(typeof body.detail==='string'?body.detail:JSON.stringify(body.detail));return body;
+}
+function get(obj,path){return path.split('.').reduce((a,b)=>a?.[b],obj);}
+function set(obj,path,value){const p=path.split('.');if(p.length===2){obj[p[0]]??={};obj[p[0]][p[1]]=value;}else obj[path]=value;}
+function drawFields(){
+ for(const [list,target] of [[fields,'#fields'],[extra,'#extra-fields']])for(const [path,label,type] of list){
+  const l=document.createElement('label');l.textContent=label;
+  const input=document.createElement(['country','vehicle','service','bool'].includes(type)?'select':'input');input.dataset.path=path;input.dataset.type=type||'text';
+  if(input.tagName==='SELECT'){
+   const values=type==='country'?config.catalogs.NombresPaises:type==='vehicle'?config.catalogs.NombresVehiculos:type==='service'?['FTL','GROUPAGE','RIGID']:['S','N'];
+   for(const v of ['',...values]){const option=document.createElement('option');option.value=v;option.textContent=v||'Por confirmar';input.append(option);}
+  }else{input.type=type||'text';if(type==='number'){input.step='any';input.min='0';}}
+  input.addEventListener('input',()=>{current.blocked_fields=(current.blocked_fields||[]).filter(f=>f!==path&&!path.startsWith(f+'.'));invalidate();});l.append(input);$(target).append(l);
+ }
+}
+function invalidate(){draftVersion++;result=null;$('#reviewed').checked=false;['#save','#copy-rich','#copy-md','#copy-tsv'].forEach(x=>$(x).disabled=true);$('#result-status').textContent='DATOS MODIFICADOS';$('#tsv-output').value='';}
+function fill(load){current=structuredClone(load);document.querySelectorAll('[data-path]').forEach(i=>{let v=get(load,i.dataset.path);i.value=v===true?'S':v===false?'N':v??'';});invalidate();}
+function collect(){let load=structuredClone(current);for(const i of document.querySelectorAll('[data-path]')){
+ let v=i.value.trim();if(!v)v=null;else if(i.dataset.type==='bool')v=v==='S';else if(['pallets','stop_count'].includes(i.dataset.path))v=Number(v);
+ if(i.dataset.path==='stop_count'&&v===null)v=2;set(load,i.dataset.path,v);
+ }return load;
+}
+function issues(target,list){$(target).replaceChildren();for(const i of list){const d=document.createElement('div');d.className='issue '+(i.severity==='error'?'error':'');d.textContent=i.field+': '+i.message;$(target).append(d);}}
+async function preview(){const version=draftVersion,serial=++previewSerial;const output=await api('render',{load:collect(),reviewed:$('#reviewed').checked});if(version!==draftVersion||serial!==previewSerial)return;result=output;$('#rich-output').innerHTML=result.html;$('#tsv-output').value=result.tsv||'';$('#provenance').textContent=JSON.stringify(result.provenance,null,2);issues('#issues',result.issues);$('#result-status').textContent=result.can_export?'REVISADO':'BORRADOR';['#save','#copy-rich','#copy-md','#copy-tsv'].forEach(x=>$(x).disabled=!result.can_export);}
+function receive(data){drafts=data.drafts;$('#draft-choice').replaceChildren();drafts.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=d.load.reference||'Borrador '+(i+1);$('#draft-choice').append(o);});$('#draft-picker').hidden=drafts.length<2;selectDraft(0);}
+function selectDraft(i){if(!drafts[i])return;fill(drafts[i].load);issues('#parse-issues',drafts[i].issues);}
+function action(selector,fn,event='click'){ $(selector).addEventListener(event,async e=>{try{await fn(e);}catch(err){notice(err.message,true);}});}
+async function loadHistory(){const rows=await api('history');$('#history-items').replaceChildren();for(const row of rows){const d=document.createElement('div');d.className='history-row';const text=document.createElement('span');text.textContent=row.reference+' | '+row.route+' | '+row.created.slice(0,10);const b=document.createElement('button');b.textContent='Abrir como borrador';b.onclick=async()=>{try{const v=await api('history/'+row.id);fill(v.load);showTab('prepare');notice('Snapshot abierto. Vuelve a revisar antes de copiar.');}catch(e){notice(e.message,true);}};d.append(text,b);$('#history-items').append(d);}}
+async function loadRules(){const rows=await api('rules');rulesRevision=rows[0].revision;const r=structuredClone(rows[0].rules);r.revision=rulesRevision+1;r.reason='';$('#rules-json').value=JSON.stringify(r,null,2);$('#rule-versions').replaceChildren();for(const row of rows){const o=document.createElement('option');o.value=row.revision;o.textContent='Revision '+row.revision+' - '+row.rules.reason;$('#rule-versions').append(o);}}
+function showTab(name){document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!==name);document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('selected',b.dataset.tab===name));}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=async()=>{try{showTab(b.dataset.tab);if(b.dataset.tab==='history')await loadHistory();if(b.dataset.tab==='rules')await loadRules();if(b.dataset.tab==='rates')$('#rate-list').textContent=JSON.stringify(await api('rates'),null,2);}catch(e){notice(e.message,true);}});
+action('#source',()=>invalidate(),'input');
+action('#sample',()=>{invalidate();$('#source').value='Referencia: DEMO-001\nCliente: XPO TRANSPORT SOLUTIONS SPAIN SL\nOrigen: ES 28909 Getafe\nDestino: PT 2675-076 Odivelas\nRecogida: 20/10/2026 10:00-16:00\nDescarga: 21/10/2026 12:00-13:00\nServicio: FTL\nPeso: 15 t\nMercancia: Aceite / Oil\nPrecio cliente: 900';notice('Ejemplo sintetico; no es una oferta ni una tarifa real.');});
+action('#analyze',async()=>{receive(await api('parse',{text:$('#source').value,mode:$('#mode').value}));notice('Entrada analizada. Revisa los campos antes de copiar.');});
+action('#blank',()=>{fill({});issues('#parse-issues',[]);});action('#draft-choice',e=>selectDraft(Number(e.target.value)),'change');
+action('#preview',preview);action('#reviewed',preview,'change');
+action('#save',async()=>{const saved=await api('save',{load:collect(),reviewed:$('#reviewed').checked});notice(saved.duplicate?'Ya existia: no se ha duplicado.':'Guardado #'+saved.id+(saved.related.length?' como nueva revision de la expedicion.':'.'));});
+async function copy(which){if(!result?.can_export)throw new Error('Revisar y validar antes de copiar');if(which==='rich'&&window.ClipboardItem){await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([result.html],{type:'text/html'}),'text/plain':new Blob([result.plain],{type:'text/plain'})})]);}else await navigator.clipboard.writeText(which==='tsv'?result.tsv:which==='md'?result.markdown:result.plain);notice('Copiado.');}
+action('#copy-rich',()=>copy('rich'));action('#copy-md',()=>copy('md'));action('#copy-tsv',()=>copy('tsv'));action('#refresh-history',loadHistory);action('#backup',async()=>notice((await api('backup',{})).message));
+action('#save-rules',async()=>{await api('rules',{rules:JSON.parse($('#rules-json').value),expected_revision:rulesRevision},'PUT');invalidate();await loadRules();notice('Reglas guardadas como nueva revision.');});
+action('#restore-rules',async()=>{await api('rules/restore',{revision:Number($('#rule-versions').value),expected_revision:rulesRevision});invalidate();await loadRules();notice('Reglas restauradas sin borrar el historial.');});
+action('#save-rate',async()=>{await api('rates',JSON.parse($('#rate-json').value),'PUT');invalidate();$('#rate-list').textContent=JSON.stringify(await api('rates'),null,2);notice('Tarifa guardada; vuelve a calcular los resultados.');});
+action('#excel-file',async e=>{const f=e.target.files[0];if(!f)return;const data=new FormData();data.append('file',f);sheets=(await api('excel/preview',data)).sheets;$('#sheet-choice').replaceChildren();sheets.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s.sheet;$('#sheet-choice').append(o);});$('#importer').hidden=false;drawMapping();},'change');
+function drawMapping(){const sheet=sheets[Number($('#sheet-choice').value)||0];$('#mapping').replaceChildren();if(!sheet?.rows.length)return;sheet.rows[0].forEach((header,index)=>{const d=document.createElement('div');d.className='mapping-row';const l=document.createElement('span');l.textContent=String(header??'Columna '+(index+1));const sel=document.createElement('select');sel.dataset.column=index;for(const v of ['',...config.import_fields]){const o=document.createElement('option');o.value=v;o.textContent=v||'Ignorar';sel.append(o);}sel.value=config.mapping_defaults[header]||'';d.append(l,sel);$('#mapping').append(d);});}
+action('#sheet-choice',drawMapping,'change');action('#import-confirm',async()=>{const mapping={};for(const s of document.querySelectorAll('#mapping select'))if(s.value){if(s.value in mapping)throw new Error('Campo asignado dos veces');mapping[s.value]=Number(s.dataset.column);}const sheet=sheets[Number($('#sheet-choice').value)||0];if(sheet.truncated)throw new Error('La hoja supera 50 filas: dividir antes de importar. No se importan datos truncados.');receive(await api('excel/import',{rows:sheet.rows.slice(1,51),mapping}));notice('Filas importadas como borradores. Los campos no importados requieren revision.');});
+action('#ocr-file',async e=>{const f=e.target.files[0];if(!f)return;const data=new FormData();data.append('file',f);const response=await api('ocr',data);$('#source').value=response.text;invalidate();notice(response.warning+' Confianza media por palabra: '+response.mean_word_confidence.toFixed(1)+'%.');},'change');
+(async()=>{try{config=await api('config');drawFields();fill({});notice('Motor local listo. Datos reales solo en este equipo.');}catch(e){notice(e.message,true);}})();

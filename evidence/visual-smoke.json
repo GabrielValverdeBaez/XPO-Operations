@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "mode": "offline DOM with fixture-backed API; not live E2E",
+  "browser": "144.0.7559.96",
+  "checks": [
+    "source form",
+    "populated fields",
+    "review gating",
+    "26 cells including trailing empties",
+    "format label boundaries",
+    "edit invalidation",
+    "desktop rendering",
+    "390px mobile no overflow",
+    "no JS page errors"
+  ],
+  "not_tested": [
+    "browser-to-localhost blocked by administrator policy",
+    "clipboard system integration",
+    "actual Mac mini deployment"
+  ]
+}
