@@ -37,11 +37,16 @@ def main():
             try:
                 with httpx.Client(base_url=BASE,verify=False,timeout=10,trust_env=False) as c:
                     ready=False
-                    for _ in range(150):
+                    deadline=time.monotonic()+150
+                    failed_responses=0
+                    while time.monotonic()<deadline:
                         if proc.poll() is not None:raise RuntimeError('Worker process exited')
                         try:
-                            r=c.get('/login')
+                            r=c.get('/login',timeout=2)
                             if r.status_code==200:ready=True;break
+                            failed_responses+=1
+                            if failed_responses>=3:
+                                raise RuntimeError(f"Login startup returned {r.status_code}: {r.text[:300]}")
                         except httpx.HTTPError:pass
                         time.sleep(1)
                     if not ready:raise RuntimeError('Worker did not serve login')

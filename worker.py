@@ -1,7 +1,9 @@
-"""Module-level entrypoint compatible with the Python runtime bundled by Wrangler."""
+"""Cloudflare entrypoint; runtime SDK is explicitly vendored for modern dates."""
+from workers import WorkerEntrypoint
 from cloud_adapter.api import app
 
 
-async def on_fetch(request, env):
-    import asgi
-    return await asgi.fetch(app, request, env)
+class Default(WorkerEntrypoint):
+    async def fetch(self, request):
+        import asgi
+        return await asgi.fetch(app, request, self.env)

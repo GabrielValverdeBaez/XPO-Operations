@@ -5,6 +5,9 @@ on:
   pull_request:
     paths: ['cloud_adapter/**', 'cloud_assets/**', 'worker.py', 'wrangler.jsonc', 'pyproject.toml', 'package.json', 'scripts/build_cloudflare.py', 'scripts/smoke_cloudflare.py', 'tests/test_cloud_adapter.py', 'static/**', '.github/workflows/cloudflare-checks.yml']
   workflow_dispatch:
+concurrency:
+  group: cloudflare-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:

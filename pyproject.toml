@@ -6,10 +6,11 @@ dependencies = [
   "fastapi>=0.128,<0.129",
   "pydantic>=2.12,<3",
   "openpyxl==3.1.5",
+  "workers-runtime-sdk==0.4.2",
 ]
 
 [dependency-groups]
-dev = ["workers-py", "workers-runtime-sdk"]
+dev = ["workers-py==1.0.3"]
 
 [tool.uv]
 package = false

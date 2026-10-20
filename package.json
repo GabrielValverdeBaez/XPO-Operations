@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "build": "python scripts/build_cloudflare.py",
-    "deploy": "cd dist/cloudflare && uv run pywrangler deploy",
-    "dev:cloudflare": "cd dist/cloudflare && uv run pywrangler dev"
+    "deploy": "cd dist/cloudflare && python -m uv run pywrangler deploy",
+    "dev:cloudflare": "cd dist/cloudflare && python -m uv run pywrangler dev"
   },
-  "devDependencies": {"wrangler": "^4.64.0"}
+  "devDependencies": {
+    "wrangler": "^4.64.0"
+  }
 }
