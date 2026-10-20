@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "source": "single synthetic English image",
+  "text": "REFERENCE: SYN-IMAGE\nWEIGHT: 15000 KG",
+  "confidence": 94.24083399999999,
+  "review_required": true,
+  "not_proven": "accuracy on real FOTE screenshots or Spanish labels"
+}

@@ -1,67 +1,72 @@
-# Contrato Wtransnet A:Z — Auditoría T-001
+# Wtransnet - Contrato auditado del XLS original
 
-**Estado:** reconstruido desde instrucciones XPO existentes; **NO VERIFICADO CONTRA EL XLSX OFICIAL**. No declarar T-001 completada hasta cotejo de plantilla real y muestras.
+Fuente: archivo `es_EUR_CG (1).xls` aportado por el operador, **no publicado**. SHA-256 `836b2eb26bf7d33e1ae21bf266416b9ffdc68507db4fb14dc7178c52afe9c1f3` (61.952 bytes). Auditada directamente la estructura CFB/BIFF8 el 20/10/2026. Hoja Ofertas: 26 encabezados A:Z, once auxiliares AA:AK, cero celdas de ofertas no vacias bajo el encabezado.
 
-## Mapa provisional de 26 columnas
+La fuente de datos para el programa es `evidence/template-audit.json`. Incluye los encabezados exactos con sus acentos, catalogos, nombres definidos y las **12 validaciones DV**. El catalogo de vehiculos tiene **27 valores**, no solo los siete valores de la lista preliminar. Hay 65 entradas en el catalogo de paises; las opciones por defecto no confirman un pais de una expedicion.
 
-| Pos | Excel | Campo | Regla / verificación pendiente |
-|---:|:---:|---|---|
-| 1 | A | Referencia | Identificador de expedición, preservar texto |
-| 2 | B | Fecha disponibilidad | DD/MM/AAAA; sin hora |
-| 3 | C | País origen | Nombre en español |
-| 4 | D | CP origen | ES cinco cifras; PT cuatro |
-| 5 | E | Localidad origen | Obligatoria para búsqueda de bolsa |
-| 6 | F | País destino | Nombre en español |
-| 7 | G | CP destino | ES cinco cifras; PT cuatro |
-| 8 | H | Localidad destino | Obligatoria para búsqueda de bolsa |
-| 9 | I | Tipo Bolsa | Grupajes / Rígidos Completos / Tráilers Completos |
-| 10 | J | Tipo Vehículo | Trailer, Trailer Mega, Camión Remolque, Camión 3 ejes, Camión 4 ejes, Camión 2 ejes > 7,5 T. MMA, Furgonetas; sujeto a lista de plantilla |
-| 11 | K | Especialidad | Carga General (regla XPO actual) |
-| 12 | L | Peso | Toneladas, separador decimal coma |
-| 13 | M | Largo | Metros, separador decimal coma; FTL tráiler 13,6 salvo dato contrario |
-| 14 | N | Adr | S, N o vacío; no asumir N por ausencia |
-| 15 | O | Paletizado | S, N o vacío |
-| 16 | P | Intercambio Palets | S, N o vacío |
-| 17 | Q | Localizador GPS | S, N o vacío |
-| 18 | R | Arriba | S, N o vacío |
-| 19 | S | Lateral | S, N o vacío |
-| 20 | T | Detrás | S, N o vacío |
-| 21 | U | Sirve Frigorífico | S por defecto según regla existente; FASSA N |
-| 22 | V | Sirve Lateral Bajo | S, N o vacío |
-| 23 | W | Misma Especialidad | S, N o vacío |
-| 24 | X | Comentarios Públicos | Máximo 500 caracteres, horarios Carga/Descarga; sanitizar tabuladores/saltos |
-| 25 | Y | Precio | **SIEMPRE VACÍO**; nunca copiar ingreso ni estimación |
-| 26 | Z | Activar Serv. Alerta | S, N o vacío |
+## A:Z en orden
 
-## Restricciones deterministas
-- Exportar TSV sin encabezado, una fila por carga, máximo 50; pegar en `Ofertas!A2`. Preservar vacíos, incluido el último y penúltimo campo.
-- Comprobar `row.split("\\t").length === 26`; nunca quitar tabs finales con trim.
-- Normalizar fecha a DD/MM/AAAA; horas exclusivamente en comentarios: `Carga: DD/MM/AAAA de HH:MM a HH:MM. Descarga: DD/MM/AAAA de HH:MM a HH:MM.`.
-- Texto bilingüe usa CP PT íntegro (`2675-076`), mientras TSV usa `2675`.
-- Para cargas FTL el peso proviene del dato de la orden, no de la capacidad máxima teórica. No derivar metros lineales de unidades FTL.
-- No sustituir por localidad/alias un CP explícito de la fuente actual sin detectar contradicción.
-- Declarar error o revisión ante campos críticos ausentes o valores fuera de catálogo.
+| Columna | Campo |
+|---|---|
+| A | Referencia |
+| B | Fecha disponibilidad |
+| C | Pais origen |
+| D | CP origen |
+| E | Localidad origen |
+| F | Pais destino |
+| G | CP destino |
+| H | Localidad destino |
+| I | Tipo Bolsa |
+| J | Tipo Vehiculo |
+| K | Especialidad |
+| L | Peso |
+| M | Largo |
+| N | Adr |
+| O | Paletizado |
+| P | Intercambio Palets |
+| Q | Localizador GPS |
+| R | Arriba |
+| S | Lateral |
+| T | Detras |
+| U | Sirve Frigorifico |
+| V | Sirve Lateral Bajo |
+| W | Misma Especialidad |
+| X | Comentarios Publicos |
+| Y | Precio |
+| Z | Activar Serv. Alerta |
 
-## Matriz de pruebas mínimas — a convertir en golden fixtures
-| Caso | Entrada | Oráculo |
+Las grafias exactas del libro estan en el JSON, sin normalizacion. AA:AD son BLANK; AE EsViernes; AF FechaHoraDispInicio; AG IdTipoBolsa; AH IdTipoVehiculo; AI IdEspecialidad; AJ IdPaisOrigen; AK IdPaisDestino. No generar ni sobrescribir estos auxiliares.
+
+## Validaciones observadas, no supuestas
+
+| Rango | Restriccion DV | Permite blanco |
 |---|---|---|
-| S1 | ES 28909 → PT 2675-076, 15 t FTL | D=28909, G=2675, I=Tráilers Completos, J=Trailer, L=15, M=13,6; Y vacío |
-| S2 | PT con CP 0410-001 | En TSV preservar 0410 como texto con cero inicial |
-| S3 | ADR no mencionado | N vacía, no N |
-| S4 | Diversey Illescas ADR confirmado por regla | N=S, O=S, con procedencia de regla |
-| S5 | Servicio de grupaje LG/LX sin peso ni ML | L=2, M=5; no imponer si hay valor real |
-| S6 | Comentario con salto de línea o TAB | Una sola fila y exactamente 26 columnas |
-| S7 | Dos expediciones misma ruta con distintas referencias | Dos filas, no deduplicar por corredor |
-| S8 | Precio cliente 850 y precio mercado 950 | Y queda vacío en TSV |
+| N2:W39 y Z2:Z39 | Lista SiNo (S/N) | Si |
+| M2:M39 | Decimal >= 0 | Si |
+| AD2:AE39 | Tipo cualquier valor | Si |
+| J2:J39 | NombresVehiculos | Si |
+| K2:K39 | NombresEspecialidades | Si |
+| I2:I39 | NombresTiposBolsa | Si |
+| C2:C39 y F2:F39 | NombresPaises | Si |
+| D2:D39 y G2:G39 | Longitud de texto >= 2 | Si |
+| L2:L39 | Decimal >= 0 | Si |
+| E2:E39 | Longitud de texto <= 60 | No |
+| H2:H39 | Longitud de texto <= 60 | Si |
+| Y2:Y39 | Decimal entre 0 y 99999 | No |
 
-## Gate documental pendiente
-**Fuente primaria ya facilitada:** archivo XLS original aportado el 20/10/2026. Orden A:Z y nombres de hoja confirmados según auditoría inicial. Falta completar la lectura de validaciones internas, obligatoriedad, listas permitidas y ejemplos operativos aceptados. La biblioteca de lectura XLS no estaba disponible en el entorno de ejecución actual; no declarar esos campos comprobados.
+Estas validaciones terminan en la **fila 39: 38 ofertas**. La regla operativa de lotes de hasta 50 no demuestra que las filas siguientes del XLS esten validadas. El CLI avisa si el lote supera 38; la interfaz prepara una oferta cada vez. No hay una DV de fecha en B ni una DV de 500 caracteres en X: esos controles los aporta la politica de la aplicacion.
 
-**Para cerrar:** contrastar validaciones con el XLS ya recibido y cinco o más muestras anonimizadas con salida aceptada; registrar diferencias antes de congelar versión 1.0. No subir el XLS a repositorio público.
+## Politica XPO diferenciada del libro
 
+Y siempre vacia; texto y precio cliente/mercado fuera de TSV. Esta regla del operador prevalece para la salida, no es algo que se deduzca de la validacion numerica del XLS. Pais en espanol, ES CP de 5 cifras, PT CP de 4 en TSV y completo en texto; peso t y metros m con coma decimal; especialidad Carga General. ADR/paletizado desconocidos se dejan vacios, no N. Fecha B real DD/MM/AAAA; horarios en X y hasta 500 caracteres; conservar 26 celdas incluso vacias al final.
 
-## Auditoría del XLS recibido (20/10/2026)
+La aplicacion exige peso y ML positivos para confirmar una oferta; el libro admite cero, lo cual no confirma que el peso real sea cero. Formula inyectable o controles que rompan TSV se rechazan. No se inventan horas, paises ni precio de mercado.
 
-Se inspeccionó la estructura del archivo binario XLS proporcionado por el usuario sin publicarlo en GitHub. La primera fila de `Ofertas` confirma exactamente los 26 encabezados A:Z enumerados arriba. La hoja también contiene once columnas auxiliares AA:AK, que no deben rellenarse al generar las ofertas. Existen hojas auxiliares `Paises`, `Especialidades`, `Vehículos`, `Otras listas`, `Horas` y `Vigencia`. Los tres valores documentados de Tipo Bolsa coinciden con los del libro.
+## Reproduccion
 
-**Verificado:** nombres y orden A:Z; presencia de hojas y columnas auxiliares. **Pendiente:** auditoría completa de las restricciones de validación y comparación de muestras aceptadas antes del cierre de T-001.
+```sh
+python scripts/audit_xls.py /ruta/privada/es_EUR_CG.xls /ruta/privada/audit.json
+python -m pytest -q
+```
+
+El lector no ejecuta macros ni formulas; falla ante estructuras fuera de su alcance. La repeticion exacta requiere el original privado. Los tests de CI usan el manifiesto auditado, no simulan disponer del original ni certifican un envio aceptado por Wtransnet. La aceptacion operativa permanece en T-008.

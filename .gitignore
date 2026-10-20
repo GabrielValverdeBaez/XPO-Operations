@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+*.sqlite*
+*.db
+*.xls
+*.xlsx
+*.xlsm
+*.png
+session.token
+private/
+dist/
+# Only synthetic visual evidence may be explicitly force-added after review.

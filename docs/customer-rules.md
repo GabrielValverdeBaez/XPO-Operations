@@ -1,65 +1,31 @@
-# Reglas XPO por cliente — Auditoría T-001
+# Matriz de reglas XPO y cobertura 0.1
 
-**Estado:** inventario de reglas confirmadas en instrucciones operativas; revisión contra muestras reales pendiente.
+Fuente operativa: instrucciones de XPO Cargas y Wtransnet y correcciones expresas del usuario en esta conversacion. Son reglas del operador, no restricciones inferidas de Wtransnet. Codigo canonico: `loadstudio/engine.py`; notas y switches persistentes en SQLite.
 
-## Precedencia
-Instrucción explícita actual > dato visible FOTE/captura/Excel de la expedición > excepción de cliente confirmada > default documentado. Una regla de cliente se activa por identidad inequívoca, **no por localidad, mercancía genérica o CP compartido**. Conservar por campo `source, rule_id, version, confirmed` y registrar advertencia ante conflicto. Un dato vigente explícito no se sobrescribe con patrón histórico.
+Precedencia: dato actual confirmado > excepcion exacta de cliente > fallback documentado. Un conflicto del parser bloquea el campo: una regla no lo rellena como si fuera una simple ausencia. Cliente no reconocido no recibe notas de un cliente vecino. Aliases son exactos, normalizando mayusculas/acentos; no se adivina identidad por el CP.
 
-## Notas de texto (después de LOS DOS precios)
-| Identificación inequívoca | Texto exacto | Prohibición |
-|---|---|---|
-| Groupe SEB + DHL Ontígola | `NOTA: Adelantar hora de posicionamiento. Indicar matrículas.` | No aplicarla a otros clientes de Ontígola |
-| TCL | `NOTA: Indicar matrículas.` | No aplicarla por compartir origen/destino |
-| Mattel | `NOTA: Indicar matrículas y nombre del conductor.` | No aplicarla a otros operadores |
-| Otros | Sin nota | Prohibidas notas genéricas |
+| Caso | Implementacion y evidencia |
+|---|---|
+| Notas | SEB y centro DHL Ontigola: adelantar posicionamiento y matriculas. TCL: matriculas. Mattel: matriculas y conductor. Siempre despues de ambos precios; casos positivos/negativos probados. |
+| LG/LX Pantos grupaje | Solo falta peso: 2000 kg; solo falta ML: 5; ambos independientes; conservar valores presentes. Dimensiones confirmadas prevalecen sobre europales (0,40 m/unidad) y sobre el fallback; nunca sobrescribir ML explicitos. No aplicar a FTL. |
+| Diversey Illescas | ADR y paletizado; carga 10-19 y dia siguiente 06 solo donde falta dato, sin sobrescribir hora explicita. ADR false explicito se conserva con advertencia de excepcion. |
+| Danone/L'Oreal | Aguas Danone y L'Oreal: ADR N y paletizado S. Danone Siguenza: ADR N, no inferir paletizado. Corregida la antigua anotacion del repositorio que dejaba ADR Siguenza desconocido. |
+| PEPCO | FTL 12 t / 13,6 m; horas de respaldo solo si faltan; datos actuales prevalecen. |
+| FASSA | Sirve frigorifico N; otros S segun politica vigente. |
+| Servicios | T100, TR014, NTIE1 FTL; NT214 grupaje. NT014 no se interpreta por semejanza. |
+| Equipos | Tautliner standard se normaliza a Trailer + Tautliner. Sin Mega inventado. Un rigido no recibe Trailer por defecto. |
+| CP centros | XPO Leganes 28911, Ledono 15189, Arrubal 26150 y otros aliases exactos presentes en codigo; nunca reemplazar CP actual. |
+| Mercancia | Fallback solo para cliente confirmado y descripcion ausente; se mantiene una descripcion actual aunque no haya traduccion, exigiendo completarla. |
+| Norauto multientrega | NT014, cliente exacto y recorrido confirmado Sesena - Logrono (o Arrubal/XPO) - Pamplona/Imarcoain: FTL 20 t, 13,6 m, ADR N y paletizado N solo si faltan. No aplicar a otra ruta, pais, accion o servicio. |
+| Dimensiones | Solo grupaje: suma(largo x ancho x cantidad)/2,40, redondeo a dos decimales. Exigir confirmacion de dimensiones. Un ML explicito se conserva; conflicto genera advertencia. Nunca calcular por dimensiones una FTL. |
+| Paradas intermedias | Conservar orden, accion, CP y fecha en texto y comentarios TSV. Validar numero y cronologia. Si los comentarios superan 500 caracteres, bloquear sin truncar paradas. |
+| Aliases secundarios | Centros PT y ES exactos, Burgos ciudad 09001 frente a XPO 09006, Carnaxide 2795 y Ontigola 45340. Fuente actual prevalece; contradiccion de pais y centro bloquea. |
+| Nuevos clientes | El editor modifica notas/switches conocidos, no crea reglas ejecutables arbitrarias. Las ampliaciones de clientes necesitan una regla documentada y pruebas. |
 
-## Reglas y excepciones por operador
-| Cliente / escenario | Regla provisional | Límite |
-|---|---|---|
-| LG y LX Pantos, **solo grupaje** | Peso ausente → 2 t; ML ausentes → 5 m; datos presentes conservados | Dimensiones reales calculables prevalecen |
-| Diversey, origen GXO Illescas | ADR=S; paletizado=S en TSV; si faltan horarios: carga 10–19 h, entrega día siguiente 06 h | Horarios actuales FOTE prevalecen; no forzar en otras operaciones |
-| Aguas Danone | ADR=N, paletizado=S | No extrapolar a Danone Sigüenza |
-| L'Oréal | ADR=N, paletizado=S | Confirmar identidad del cliente |
-| Danone Sigüenza | No inferir ADR | Campo vacío si no consta |
-| PEPCO | FTL Trailer 12 t, 13,6 m; recogida 13:00 y entrega día siguiente 11–14 solo en ausencia | Fuente vigente prevalece; no inferir paletizado |
-| Norauto Seseña → Logroño → Pamplona NT014 | 20 t, 13,6 m, ADR=N, paletizado=N | Únicamente repetición verificada de ese patrón |
-| FASSA | Sirve Frigorífico=N | Confirmar en plantilla y reglas de oferta |
-| XPO / ID Logistics | Mercancía por defecto: Mercancía paletizada / Palletized goods | Solo si no existe descripción actual y el cliente está confirmado |
-| Groupe SEB | Mercancía fallback: Pequeños electrodomésticos / Small household appliances | No adivinar producto específico |
-| Mango | Mercancía fallback: Ropa / Clothing | No sobrescribir descripción de orden |
-| Danone | Mercancía fallback: Agua paletizada / Palletized water | No trasladar a toda marca sin verificar contexto |
-| LG/LX | Mercancía fallback: Electrónica y electrodomésticos paletizados / Palletized electronics and household appliances | Clasificación general, no SKU |
+## Formato bloqueado por contrato
 
-## Alias de CP operativos (solo centro identificado)
-XPO Leganés U226 28911; XPO Ledoño 15189; XPO Arrúbal 26150; Norauto Seseña DHL 45224; XPO Imárcoain 31119; XPO Santurtzi 48980; Celeritas Alovera 19208. No sustituir un CP diferente asociado a dirección actual. Corregidos anteriormente: Carnaxide Wtransnet 2795, Burgos ciudad 09001 (XPO Burgos 09006).
+Encabezado completo en negrita. Solo etiquetas ES en negrita y etiquetas EN en cursiva; valores planos. Origen/Destino del cuerpo solo CP. Tipo directo `FTL · Trailer Tautliner · 15 t · 13,6 m` ajustado a datos actuales, sin expandir FTL. Peso/ML no se separan en otra linea. Dos precios finales; mercado independiente, pendiente cuando no existen comparables. Notas exactas al final. Los tests verifican estas fronteras de formato.
 
-## Servicio y mercancía
-TR014 → FTL; NT014 → FTL solo cuando confirmado; NTIE1 → tráiler completo; NT214 → grupaje. No interpretar códigos por semejanza. Grupaje con dimensiones: ML = suma(largo × ancho × cantidad / 2,40), dos decimales. NT214 con europalés confirmados y sin dimensiones contradictorias: unidades × 0,40 m. Nunca aplicar este cálculo de palés a FTL.
+## Revision humana
 
-## Plantilla de texto — contrato preciso
-```markdown
-**20/10/2026 — GETAFE → ODIVELAS — Ref.: EJEMPLO**
-**Origen** / *Origin*: 28909
-**Destino** / *Destination*: 2675-076
-**Tipo** / *Type*: FTL · Trailer Tautliner · 15 t · 13,6 m
-**Mercancía** / *Goods*: Aceite / Oil
-**Recogida** / *Pickup*: 20/10/2026, 10:00–16:00
-**Descarga** / *Delivery*: 21/10/2026, 12:00–13:00
-**Precio cliente** / *Client price*: 850,00 €
-**Precio mercado estimado** / *Estimated market price*: Por confirmar / To be confirmed
-```
-Ejemplo de formato basado en una ruta conocida; precio de mercado deliberadamente pendiente, no tarifa cotizada. Encabezado completo negrita; solo etiquetas españolas negrita, solo etiquetas inglesas cursiva, valores planos; Origen/Destino solo CP. Dos precios obligatorios, notas solo al final para cliente correspondiente.
-
-## Casos negativos obligatorios
-1. Cliente desconocido con origen Ontígola **NO** activa nota Groupe SEB.
-2. TCL con instrucciones actuales distintas: señalar conflicto y aplicar precedencia documentada.
-3. Diversey con ADR explícito incompatible: detectar excepción, no corregir silenciosamente.
-4. LG/LX grupaje con peso presente 10,174 t y ML 6,30 m: no sustituir por 2 t/5 m.
-5. ID Logistics y Mattel misma ruta: la nota Mattel solo en Mattel.
-6. Falta de CP o ingreso: estado de revisión; nunca crear datos.
-7. Price cliente no sirve como base porcentual para mercado.
-
-## Pendientes para cierre
-- Confirmar identidades/códigos de cliente aplicables en FOTE y equivalencia de aliases.
-- Contrastar notas, ventanas y paletización con muestras aceptadas.
-- Registrar aprobación operativa y ejemplos anonimizados; si alguna regla contradice fuente actual, versionar cambio.
+Las reglas documentadas no acreditan cinco ofertas reales aceptadas. El editor permite corregir notas conocidas de forma explicita y auditable, sin codigo ejecutable. Los casos que no cubre la version permanecen visibles o bloqueados; no se ocultan tras un estado DONE global.
