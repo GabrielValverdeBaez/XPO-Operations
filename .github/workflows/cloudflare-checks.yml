@@ -41,12 +41,15 @@ jobs:
           from pathlib import Path
           import subprocess
           import sys
-          # Only the disposable local test bundle gets diagnostics. This runner
-          # has no Cloudflare credentials and the smoke uses synthetic loads.
+          # Diagnostics are confined to this disposable localhost bundle, with
+          # synthetic data and no Cloudflare account credentials. Never deploy it.
           target = Path('dist/cloudflare/cloud_adapter/api.py')
           original = target.read_text()
           marker = '                except Exception:\n                    # Provider errors'
-          diagnostic = '                except Exception:\n                    import traceback\n                    traceback.print_exc()\n                    # Provider errors'
+          diagnostic = ('                except Exception as exc:\n'
+                        '                    import traceback\n'
+                        "                    return JSONResponse({'detail': type(exc).__name__ + ': ' + str(exc), 'trace': traceback.format_exc()}, status_code=503)\n"
+                        '                    # Provider errors')
           if original.count(marker) != 1:
               raise SystemExit('D1 diagnostic insertion point changed; review required')
           try:
