@@ -11,7 +11,20 @@ def dump(obj):
 
 
 def native(obj):
-    return obj.to_py() if hasattr(obj, 'to_py') else obj
+    """Decode JSON-valued binding responses, including non-plain JS objects.
+
+    JsProxy.to_py() can leave host objects unchanged. Calling dict methods
+    on that proxy then fails in workerd although native test doubles pass.
+    JSON materialization is explicit here: use only for binding RESULTS,
+    never for statements, buffers, credentials or callable bindings.
+    """
+    if obj is None or type(obj) in (dict, list, str, int, float, bool):
+        return obj
+    from js import JSON
+    encoded = JSON.stringify(obj)
+    if not isinstance(encoded, str):
+        raise TypeError('Binding response is not JSON serializable')
+    return json.loads(encoded)
 
 
 def js_array(values):
