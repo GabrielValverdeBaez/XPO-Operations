@@ -34,7 +34,7 @@ Fase 1: FOTE/manual, reglas y doble salida (nucleo implementado; equivalencia co
 | [T-004](TASKS/T-004.md) Spike y eleccion de arquitectura local | DONE | `docs/DECISIONS.md` |
 | [T-005](TASKS/T-005.md) Parser FOTE y diagnostico | DONE | `loadstudio/ingest.py` |
 | [T-006](TASKS/T-006.md) Motor XPO y extensiones de reglas | REVIEW | `loadstudio/engine.py` |
-| [T-007](TASKS/T-007.md) Interfaz de revision y resultados | REVIEW | `static/index.html` |
+| [T-007](TASKS/T-007.md) Interfaz de revision y resultados | DONE | `static/index.html` |
 | [T-008](TASKS/T-008.md) Aceptacion operativa MVP | BLOCKED | `evidence/operational-acceptance.md` |
 | [T-009](TASKS/T-009.md) Parser de texto con gramatica acotada | DONE | `docs/USAGE.md` |
 | [T-010](TASKS/T-010.md) Importador XLSX revisable | DONE | `loadstudio/ingest.py#import_rows` |
@@ -57,7 +57,7 @@ T-008 + T-013 -> T-014
 ```
 
 ## READY
-No hay nuevas tareas TODO derivadas READY. Prioridad inmediata: resolver REVIEW de T-006 (multi-parada/dimensiones/aliases), ejecutar T-007 en navegador conectado y ampliar T-013 con capturas/tarifas verificadas. No volver a pedir el XLS original ni repetir una busqueda de plantilla.
+No hay nuevas tareas TODO derivadas READY. Prioridad inmediata: resolver REVIEW de T-006 (multi-parada/dimensiones/aliases) y ampliar T-013 con capturas/tarifas verificadas. T-007 ya ha pasado el navegador conectado en CI. No volver a pedir el XLS original ni repetir una busqueda de plantilla.
 
 ## BLOCKED
 T-008: aceptacion operativa real pendiente y cobertura incompleta de reglas avanzadas. T-014: gates anteriores y equipo objetivo no instalado. El repositorio no contiene los datos privados necesarios para calibrar precios. No inventar un mercado ni declarar el servidor del Mac instalado.
@@ -66,4 +66,8 @@ T-008: aceptacion operativa real pendiente y cobertura incompleta de reglas avan
 Epoca 2, claim unico xpo-20261020-implementation. La auditoria primaria, implementacion, tests API/modelo y revision visual offline se registran en evidence/verification.md. El informe de CI debe consultarse por commit: un run antiguo de diez tests no acredita estos cambios.
 
 ## Next execution
-Completar cobertura de reglas pendiente, comprobar workflow de esta rama, corregir cualquier fallo y actualizar evidencia. Mantener PR sin merge automatico. Al desplegar de verdad, registrar host, version, prueba de acceso privado y restauracion, sin credenciales. Preguntar solo por una regla comercial no verificable, una decision reservada o acceso al equipo que no se pueda resolver tecnicamente.
+Completar cobertura de reglas pendiente. El workflow conectado de commit 4f4060c ya ha pasado; conservar regresiones y actualizar evidencia. Mantener PR sin merge automatico. Al desplegar de verdad, registrar host, version, prueba de acceso privado y restauracion, sin credenciales. Preguntar solo por una regla comercial no verificable, una decision reservada o acceso al equipo que no se pueda resolver tecnicamente.
+
+## Evidencia CI conectada
+
+GitHub Actions run [39404120752](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39404120752), job 118565768271, commit 4f4060ce15a586927f1c1e492544df986ab66ca6: SUCCESS. Pruebas 78/78, verificacion SHA de 17 fuentes, DAG, sintaxis JS y smoke_browser.py conectando navegador/API/portapapeles reales del runner. Se corrigio un uso de eval en el test, sin relajar CSP de la app. T-007 DONE. Este resultado no demuestra instalacion en Mac mini ni ofertas aceptadas por Wtransnet.

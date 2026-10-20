@@ -1,0 +1,26 @@
+{
+  "status": "success",
+  "repository": "GabrielValverdeBaez/XPO-Operations",
+  "pull_request": 3,
+  "commit": "4f4060ce15a586927f1c1e492544df986ab66ca6",
+  "run_id": 39404120752,
+  "job_id": 118565768271,
+  "url": "https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39404120752",
+  "tests_passed": 78,
+  "source_files_verified": 17,
+  "steps": [
+    "source_hashes",
+    "pytest",
+    "route_dag",
+    "javascript_syntax",
+    "chromium_install",
+    "connected_browser_smoke",
+    "artifact_upload"
+  ],
+  "not_proven": [
+    "real Wtransnet acceptance",
+    "Mac mini deployment",
+    "real corridor price accuracy",
+    "real screenshot OCR accuracy"
+  ]
+}
