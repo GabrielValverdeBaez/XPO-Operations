@@ -57,6 +57,11 @@ T-011 + T-013 → T-014
 | T-013 | O-002,O-004 | OCR local como entrada no confiable + prototipo independiente de tarifas de mercado, con fuentes y pendientes | T-012 | Evaluación OCR por campos + backtests de tarifas |
 | T-014 | O-005 | Despliegue privado en Mac mini, Tailscale, manual y aceptación final | T-011,T-013 | Tests E2E + control de acceso + recuperación backup |
 
+## Evidencia de ejecución (20/10/2026)
+- Suite sintética de contrato Wtransnet: GitHub Actions `39391760772`, resultado `success` sobre commit `a3e7be2`.
+- Esto valida los controles implementados, **no** la compatibilidad con el archivo Excel original.
+- T-001 permanece sin cerrar hasta contraste documental y aceptación operativa; T-002 sigue bloqueada.
+
 ## READY
 - **T-001** es la única tarea sin dependencias previas. Precisa reunir artefactos de referencia; no declarar DONE por existencia de este documento.
 - Cualquier desarrollo de código posterior está **NO INICIADO**.
