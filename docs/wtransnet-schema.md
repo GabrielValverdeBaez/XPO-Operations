@@ -55,9 +55,9 @@
 | S8 | Precio cliente 850 y precio mercado 950 | Y queda vacío en TSV |
 
 ## Gate documental pendiente
-**Fuente primaria ausente:** plantilla XLSX Wtransnet en vigor. Falta comprobar lista de validación de celdas, celdas opcionales, forma de pegar, orden final de columnas y diferencias de versión. La evidencia de estas reglas procede de la Skill XPO de trabajo, no de una inspección del XLSX original.
+**Fuente primaria ya facilitada:** archivo XLS original aportado el 20/10/2026. Orden A:Z y nombres de hoja confirmados según auditoría inicial. Falta completar la lectura de validaciones internas, obligatoriedad, listas permitidas y ejemplos operativos aceptados. La biblioteca de lectura XLS no estaba disponible en el entorno de ejecución actual; no declarar esos campos comprobados.
 
-**Para cerrar:** adjuntar plantilla (sin datos sensibles) y cinco o más muestras anonimizadas con salida aceptada; registrar diferencias antes de congelar versión 1.0.
+**Para cerrar:** contrastar validaciones con el XLS ya recibido y cinco o más muestras anonimizadas con salida aceptada; registrar diferencias antes de congelar versión 1.0. No subir el XLS a repositorio público.
 
 
 ## Auditoría del XLS recibido (20/10/2026)
