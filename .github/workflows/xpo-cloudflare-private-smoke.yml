@@ -79,8 +79,18 @@ jobs:
               except urllib.error.HTTPError as err:
                   resp = err
               try:
-                  raw=resp.read(160)
+                  raw=resp.read(256)
                   result_headers={k.lower():v for k,v in resp.headers.items()}
+                  if (path=='/login' and resp.status==503
+                          and result_headers.get('content-type','').startswith('application/json')):
+                      try:
+                          detail=json.loads(raw.decode('utf-8')).get('detail','')
+                          if isinstance(detail,str) and detail.startswith('Acceso cerrado. Configurar XPO_LOGIN_KEY'):
+                              status['app-reported-login-key-problem']='missing-or-invalid-secret-value'
+                          else:
+                              status['app-reported-login-key-problem']='other-runtime-503'
+                      except (ValueError, UnicodeError):
+                          status['app-reported-login-key-problem']='nonstandard-503'
                   if (path=='/login' and resp.status==403
                           and result_headers.get('server')=='cloudflare'
                           and result_headers.get('content-type','').startswith('text/plain')):
@@ -132,6 +142,8 @@ jobs:
                           break
                       if code==403 and observed[marker]>=5:
                           break  # Persistent forbidden: avoid a long exposure window
+                      if code==503 and observed[marker]>=5:
+                          break  # Persistent app unavailability, fail closed quickly
                   except (urllib.error.URLError,TimeoutError) as exc:
                       marker=type(exc).__name__
                       observed[marker]=observed.get(marker,0)+1
