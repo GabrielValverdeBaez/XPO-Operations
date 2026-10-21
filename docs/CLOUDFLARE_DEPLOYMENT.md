@@ -1,6 +1,8 @@
 # XPO Load Studio - Cloudflare deployment handoff
 
-Updated: 2026-10-21. Status: **INTEGRATION PASS / GITHUB-HOSTED DEPLOY READY; API TOKEN AND REMOTE ACCEPTANCE PENDING**.
+Updated: 2026-10-21. Status: **GITHUB DEPLOY TRIGGER REQUESTED / HOSTED RESULT AND ACCEPTANCE PENDING**.
+
+Operator confirmed via GitHub screenshot on 2026-10-21 that the repository secret `XPO_CLOUDFLARE_API_TOKEN` was created. The secret value is inaccessible and not needed in documentation. This documentation commit intentionally triggers the restricted GitHub-hosted release workflow; verify the concrete run and Cloudflare version before updating T-016.
 
 ## Browser-only deployment path (preferred for the first release)
 
