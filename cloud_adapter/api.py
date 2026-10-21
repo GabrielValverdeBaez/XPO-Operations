@@ -102,19 +102,20 @@ def create_cloud_app(test_env=None):
     @app.post('/auth/login')
     async def login(payload:LoginRequest,request:Request):
         limiter = getattr(request.state.env,'LOGIN_LIMITER',None)
-        if limiter is not None:
-            from .d1 import native
-            # Cloudflare supplies this IP header. It is hashed and never persisted by the app.
-            key = hashlib.sha256(request.headers.get('cf-connecting-ip','unknown').encode()).hexdigest()
-            try:
-                from pyodide.ffi import to_js
-                from js import Object
-                args = to_js({'key':key},dict_converter=Object.fromEntries)
-            except ImportError:
-                args = {'key':key}
-            allowed = native(await limiter.limit(args))
-            if not allowed.get('success'):
-                return JSONResponse({'detail':'Demasiados intentos. Vuelve a intentarlo en un minuto.'},status_code=429)
+        if limiter is None:
+            return JSONResponse({'detail':'Acceso cerrado: falta el limitador de intentos LOGIN_LIMITER.'},status_code=503)
+        from .d1 import native
+        # Cloudflare supplies this IP header. It is hashed and never persisted by the app.
+        key = hashlib.sha256(request.headers.get('cf-connecting-ip','unknown').encode()).hexdigest()
+        try:
+            from pyodide.ffi import to_js
+            from js import Object
+            args = to_js({'key':key},dict_converter=Object.fromEntries)
+        except ImportError:
+            args = {'key':key}
+        allowed = native(await limiter.limit(args))
+        if not allowed.get('success'):
+            return JSONResponse({'detail':'Demasiados intentos. Vuelve a intentarlo en un minuto.'},status_code=429)
         if not password_matches(payload.password,request.state.login_key):
             return JSONResponse({'detail':'Clave incorrecta'},status_code=401)
         response = JSONResponse({'ok':True})
