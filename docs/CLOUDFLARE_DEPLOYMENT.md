@@ -1,8 +1,16 @@
 # XPO Load Studio — Cloudflare deployment handoff
 
 **Updated:** 2026-10-21  
-**Status:** WORKER VERSION UPLOADED / LOGIN SECRET MISSING / HTTPS OPERATIONAL ACCEPTANCE BLOCKED  
+**Status:** WORKER VERSION UPLOADED / LOGIN BINDING IS INSECURE PLAIN_TEXT / SECRET ROTATION REQUIRED / HTTPS ACCEPTANCE BLOCKED  
 **Project Route:** [T-016](../TASKS/T-016.md) — BLOCKED (do not mark DONE).
+
+## Security finding — 21 October 2026 (requires operator action)
+
+The operator added `XPO_LOGIN_KEY` in the Production dashboard, but the newer dashboard-created Worker version `42627e7d-60e9-4307-bfe4-16fdbe59c327` contains an `XPO_LOGIN_KEY` binding of type **`plain_text`**, not `secret_text`. This was confirmed independently through [GitHub Actions read-only audit 39615897041](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39615897041). **The password value was never read or printed.** D1 and rate-limiter bindings remain present.
+
+**BLOCKER:** Do not enable workers.dev, preview URLs or another public route. In the Cloudflare Production settings, replace the plaintext variable with a **new, distinct high-entropy password** stored as a binding of type **Secret**. If the dashboard cannot change the type, delete the plaintext binding and deploy that change, then add a new binding of type Secret with the same name and deploy. Store the new password in a password manager; do not reuse the old value and do not send it to ChatGPT/GitHub. A previous plaintext Worker version may remain in version history, so rotation is essential.
+
+Future deployments have a preflight guard that rejects a login binding unless its type is `secret_text`. The read-only audit also fails deliberately for plaintext types; rerun it after replacement to verify that the latest version has `secret_text` before enabling any route. This is **not** operational acceptance.
 
 ## 1. Canonical deployment baseline
 
@@ -56,7 +64,7 @@ The pinned Python SDK returns `JsDict` instances; the serializer must accept `di
 With the Worker version uploaded, go to the [XPO Worker dashboard](https://dash.cloudflare.com/0054188c07d3b5fe7cb20fc4f71dc212/workers/services/view/xpo-load-studio/production):
 
 1. Open **Settings > Variables and secrets** and choose **Production**, never Previews Base.
-2. Select **Add variable** or **Add**. Type **Secret**, name exactly **`XPO_LOGIN_KEY`**.
+2. Locate the current `XPO_LOGIN_KEY` row shown as **Text**. Change its type to **Secret** if Cloudflare allows editing the type; otherwise delete that Text binding, deploy the deletion, and then choose **Add variable** or **Add**. Use the exact name **`XPO_LOGIN_KEY`** with type **Secret**.
 3. Generate a distinct random high-entropy password, at least 32 characters, using a password manager. The app rejects weak/configuration-like keys (it requires at least 12 distinct characters). Store the password in the manager.
 4. Choose **Deploy** or the dashboard's equivalent to persist the secret. **Do not** put the password in chat, GitHub, code, logs or a plaintext variable.
 
