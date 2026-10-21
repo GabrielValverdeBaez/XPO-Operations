@@ -62,6 +62,7 @@ jobs:
           version_reply = get_resource('/versions?per_page=2')
           deployment_reply = get_resource('/deployments?per_page=2')
           secret_reply = get_resource('/secrets')
+          settings_reply = get_resource('/settings')
 
           def items(reply, key):
               if not reply['available']:
@@ -77,11 +78,51 @@ jobs:
           versions = items(version_reply, 'items')
           deployments = items(deployment_reply, 'deployments')
           secrets = items(secret_reply, 'items')
-          latest = versions[0].get('id', 'unknown') if versions else None
-          login = None if secrets is None else any(
+          latest = versions[0].get('id') if versions else None
+
+          def binding_map(raw):
+              # Observe names/types only: ignore values and other sensitive fields.
+              if isinstance(raw, list):
+                  return {v.get('name'): v.get('type') for v in raw if isinstance(v, dict) and isinstance(v.get('name'), str)}
+              if isinstance(raw, dict):
+                  return {k: (v.get('type') if isinstance(v, dict) else None) for k, v in raw.items()}
+              return {}
+
+          def version_bindings(version_id):
+              if not version_id:
+                  return None, 'missing version ID'
+              reply = get_resource('/versions/' + version_id)
+              if not reply['available']:
+                  return None, reply['reason']
+              result = reply.get('result')
+              resources = result.get('resources', {}) if isinstance(result, dict) else {}
+              if not isinstance(resources, dict):
+                  return None, 'missing resources'
+              bindings = resources.get('bindings')
+              if bindings is None:
+                  return None, 'missing bindings'
+              return binding_map(bindings), None
+
+          latest_bindings, latest_error = version_bindings(latest)
+          old_secret = None if secrets is None else any(
               isinstance(value, dict) and value.get('name') == 'XPO_LOGIN_KEY'
               for value in secrets
           )
+          settings_bindings = None
+          if settings_reply['available'] and isinstance(settings_reply.get('result'), dict):
+              values = settings_reply['result'].get('bindings')
+              if values is not None:
+                  settings_bindings = binding_map(values)
+          login_version = None if latest_bindings is None else latest_bindings.get('XPO_LOGIN_KEY') in ('secret_text', 'secret_key')
+          login_settings = None if settings_bindings is None else settings_bindings.get('XPO_LOGIN_KEY') in ('secret_text', 'secret_key')
+          has_db = None if latest_bindings is None else latest_bindings.get('DB') == 'd1'
+          has_limiter = None if latest_bindings is None else 'LOGIN_LIMITER' in latest_bindings
+          active_versions = deployments[0].get('versions', []) if deployments and isinstance(deployments[0], dict) else []
+          active_ids = [v.get('version_id') for v in active_versions if isinstance(v, dict) and v.get('version_id')]
+          active_has_login = None
+          if active_ids:
+              checks = [version_bindings(v)[0] for v in active_ids]
+              active_has_login = all(item is not None and item.get('XPO_LOGIN_KEY') in ('secret_text', 'secret_key') for item in checks)
 
           def status(value, missing_label='unknown'):
               return missing_label if value is None else ('yes' if value else 'no')
@@ -96,15 +137,22 @@ jobs:
               f"| Version available | {status(bool(versions) if versions is not None else None)} |",
               f"| Latest version ID | `{latest or 'not available'}` |",
               f"| Deployment record exists | {status(bool(deployments) if deployments is not None else None)} |",
-              f"| Production login secret configured | {status(login)} |",
+              f"| Login Secret in **latest version bindings** | {status(login_version)} |",
+              f"| Login Secret in script settings | {status(login_settings)} |",
+              f"| Login Secret in current deployment versions | {status(active_has_login)} |",
+              f"| D1 binding in latest version | {status(has_db)} |",
+              f"| Rate limiter in latest version | {status(has_limiter)} |",
+              f"| Legacy script-level secret listing | {status(old_secret)} |",
               '',
-              'Only metadata was queried. No secret values, D1 records, or login requests were accessed.',
+              'Only names/types and version metadata were inspected. No secret values, D1 records, or login requests were accessed.',
               'A version is **not** proof of an active public route or successful HTTPS authentication.',
               'Do not enable the production URL until authentication and privacy are checked.',
           ]
-          for name, reply in [('versions', version_reply), ('deployments', deployment_reply), ('secrets', secret_reply)]:
+          for name, reply in [('versions', version_reply), ('deployments', deployment_reply), ('secrets', secret_reply), ('settings', settings_reply)]:
               if not reply['available']:
                   summary.append(f'- {name}: {reply["reason"]} (status unknown)')
+          if latest_error:
+              summary.append(f'- latest version details: {latest_error}')
           output = '\n'.join(summary)
           print(output)
           Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(output + '\n')
