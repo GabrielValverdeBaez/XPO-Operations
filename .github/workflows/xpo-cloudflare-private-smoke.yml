@@ -106,17 +106,22 @@ jobs:
               if enabled.get('enabled') is not True or enabled.get('previews_enabled') is not False:
                   raise RuntimeError('Production URL was not enabled as expected')
               ready=False
+              observed={}
               for _ in range(18):
                   try:
                       code,header=probe('/login')
+                      marker='HTTP '+str(code)
+                      observed[marker]=observed.get(marker,0)+1
                       if code==200:
                           ready=True
                           break
-                  except (urllib.error.URLError,TimeoutError):
-                      pass
+                  except (urllib.error.URLError,TimeoutError) as exc:
+                      marker=type(exc).__name__
+                      observed[marker]=observed.get(marker,0)+1
                   time.sleep(4)
+              status['login-readiness-observations']=observed
               if not ready:
-                  raise RuntimeError('Login page did not become available')
+                  raise RuntimeError('Login page not ready; see safe HTTP status counts')
               if 'text/html' not in header.get('content-type',''):
                   raise RuntimeError('Login content-type mismatch')
               expected_headers={'cache-control':'no-store','x-frame-options':'DENY',
