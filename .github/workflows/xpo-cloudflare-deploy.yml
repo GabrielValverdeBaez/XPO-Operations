@@ -112,6 +112,39 @@ jobs:
           cd dist/cloudflare
           uv run pywrangler deploy --dry-run
 
+      - name: Enforce Cloudflare Production Secret before any hosted upload
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.XPO_CLOUDFLARE_API_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          prefix = 'https://api.cloudflare.com/client/v4/accounts/0054188c07d3b5fe7cb20fc4f71dc212/workers/scripts/xpo-load-studio'
+          token = os.environ['CLOUDFLARE_API_TOKEN']
+          def get(suffix):
+              with urllib.request.urlopen(urllib.request.Request(prefix + suffix, headers={'Authorization': 'Bearer ' + token}), timeout=25) as res:
+                  payload = json.load(res)
+              if not payload.get('success'):
+                  raise RuntimeError('Cloudflare metadata API returned an error')
+              return payload['result']
+          versions = get('/versions?per_page=1')
+          versions = versions if isinstance(versions, list) else versions.get('items', [])
+          if not versions:
+              raise RuntimeError('No hosted XPO version available; refuse unattended deployment')
+          bindings = get('/versions/' + versions[0]['id'])['resources']['bindings']
+          if isinstance(bindings, list):
+              kinds = {b.get('name'): b.get('type') for b in bindings if isinstance(b, dict)}
+          elif isinstance(bindings, dict):
+              kinds = {k: (v.get('type') if isinstance(v, dict) else None) for k, v in bindings.items()}
+          else:
+              raise RuntimeError('Unrecognized Cloudflare bindings format')
+          if kinds.get('XPO_LOGIN_KEY') != 'secret_text':
+              raise RuntimeError('SECURITY BLOCK: XPO_LOGIN_KEY must be a Production Secret, never plain_text or absent')
+          if kinds.get('DB') != 'd1' or 'LOGIN_LIMITER' not in kinds:
+              raise RuntimeError('SECURITY BLOCK: Cloudflare D1 or login limiter binding missing')
+          print('PASS: production login binding is secret_text; XPO D1 and limiter present; no secret value read')
+          PY
+
       - name: Publish initial private, closed Worker
         if: steps.gate.outputs.enabled == 'true'
         env:
