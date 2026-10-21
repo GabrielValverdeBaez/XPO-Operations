@@ -1,6 +1,23 @@
 # XPO Load Studio - Cloudflare deployment handoff
 
-Updated: 2026-10-20. Status: **INTEGRATION PASS / HOSTED RELEASE BLOCKED**.
+Updated: 2026-10-21. Status: **INTEGRATION PASS / GITHUB-HOSTED DEPLOY READY; API TOKEN AND REMOTE ACCEPTANCE PENDING**.
+
+## Browser-only deployment path (preferred for the first release)
+
+No Mac mini, SSH access or software installed on the operator workstation is needed. The feature branch contains `.github/workflows/xpo-cloudflare-deploy.yml`. GitHub-hosted Ubuntu runs the checks and the existing Python `pywrangler deploy` script; no code is rebuilt from scratch.
+
+The workflow triggers on relevant pushes to `feat/cloudflare-deployment` (plus an optional manual dispatch where available). Before a **dedicated** repository secret named `XPO_CLOUDFLARE_API_TOKEN` exists, the deployment steps are skipped. It runs tests, a dry-run, verifies the bundle points only to the existing XPO Worker and EU D1, and refuses `workers_dev=true` and preview URLs. It does not run on pull_request events, `main`, or forks. After setting the token, a further commit to this deployment documentation or to a listed source path triggers a release. Merely saving a secret does not trigger a workflow.
+
+Operator actions, entirely via browser:
+
+1. In Cloudflare > My Profile > API Tokens, create an XPO-only deployment token using the Workers Scripts Edit permission scoped to the relevant account; grant any additional specific permission only if required by the actual deploy error. **Never** use the existing Evenio token or a global API key.
+2. Open [GitHub Actions repository secrets](https://github.com/GabrielValverdeBaez/XPO-Operations/settings/secrets/actions), choose New repository secret, name it exactly `XPO_CLOUDFLARE_API_TOKEN` and paste the token value **there only**. Do not paste it into chat, documents or a committed file. The account ID already exists in the allowlisted config and action.
+3. Once the operator confirms the secret was saved, create a documentation-only commit to this branch (with the controller), to trigger the protected release. Watch the GitHub Actions result. If credential permissions are insufficient, do not broaden them blindly; review the actual 403 and apply least privilege.
+4. With a first Worker version available, set `XPO_LOGIN_KEY` through Cloudflare Settings > Production > Variables and secrets as a **Secret** (32+ character random password). Do not store this application password in GitHub.
+5. Keep the workers.dev production URL and preview URLs **disabled** during initial publication. Only activate the production domain after the login Secret, binding, anonymous-denial and security checks are ready. Carry out remote acceptance with synthetic data before declaring T-016 DONE.
+
+The cloud dashboard currently shows the Git repository Connect button disabled before the first Worker version exists, so the first release uses GitHub-hosted Actions instead of interactive local Wrangler or Workers Builds. Cloudflare Builds may be linked later if needed. The Python application deliberately denies access when the login secret or login limiter is missing. Passing GitHub-hosted CI is not proof of remote acceptance.
+
 
 ## Scope and authorization
 
