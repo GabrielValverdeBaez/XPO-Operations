@@ -107,19 +107,27 @@ jobs:
                   raise RuntimeError('Production URL was not enabled as expected')
               ready=False
               observed={}
+              last_headers={}
               for _ in range(18):
                   try:
                       code,header=probe('/login')
                       marker='HTTP '+str(code)
                       observed[marker]=observed.get(marker,0)+1
+                      last_headers={k:header.get(k,'') for k in (
+                          'server','content-type','cf-mitigated','location',
+                          'x-frame-options','cache-control','x-robots-tag','via'
+                      ) if header.get(k)}
                       if code==200:
                           ready=True
                           break
+                      if code==403 and observed[marker]>=5:
+                          break  # Persistent forbidden: avoid a long exposure window
                   except (urllib.error.URLError,TimeoutError) as exc:
                       marker=type(exc).__name__
                       observed[marker]=observed.get(marker,0)+1
                   time.sleep(4)
               status['login-readiness-observations']=observed
+              status['login-response-safe-headers']=last_headers
               if not ready:
                   raise RuntimeError('Login page not ready; see safe HTTP status counts')
               if 'text/html' not in header.get('content-type',''):
