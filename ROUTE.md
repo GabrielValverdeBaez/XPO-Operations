@@ -4,7 +4,7 @@ id: route-main
 project: xpo-load-studio
 status: active
 baseline_version: '1.0'
-current_version: '1.4'
+current_version: '1.5'
 depth: M
 research_level: R1
 execution_strategy:
@@ -23,7 +23,7 @@ updated_at: '2026-10-21'
 Continuar desarrollo reversible en rama, con evidencia antes de DONE. La aceptacion comercial y despliegue siguen siendo gates de liberacion, no requisitos para escribir prototipos. Replan R-001 en docs/DECISIONS.md conserva objetivos y limites originales. La ampliacion cloud autorizada por el operador conserva la version local y se registra en docs/CLOUDFLARE_DEPLOYMENT.md. No existe un bucle de agentes ejecutandose entre conversaciones.
 
 ## Milestones
-Fase 1: FOTE/manual, reglas y doble salida (motor y extensiones de ruta/metraje implementados; aceptacion real pendiente). Fase 2: entradas flexibles, XLSX y editor (implementados dentro de la gramatica/formatos documentados). Fase 3: historial, OCR y tarifas (historial probado; prototipos OCR/tarifas sin calibracion real). Instalacion Mac mini/Tailscale pendiente e independiente. Cloudflare: integracion real workerd/D1 local PASS; Worker version ed97eb4f-e231-40dd-a57e-63220a363da6 subida desde GitHub Actions y auditada con la API; no hay ruta publica autorizada. T-016 BLOCKED porque falta XPO_LOGIN_KEY y la aceptacion HTTPS/remota.
+Fase 1: FOTE/manual, reglas y doble salida (motor y extensiones de ruta/metraje implementados; aceptacion real pendiente). Fase 2: entradas flexibles, XLSX y editor (implementados dentro de la gramatica/formatos documentados). Fase 3: historial, OCR y tarifas (historial probado; prototipos OCR/tarifas sin calibracion real). Instalacion Mac mini/Tailscale pendiente e independiente. Cloudflare: integracion real workerd/D1 local PASS; Worker version ed97eb4f-e231-40dd-a57e-63220a363da6 subida desde GitHub Actions y auditada con la API; no hay ruta publica autorizada. T-016 BLOCKED por 503 en el runtime del login: secret_text existe pero su valor no supera key_valid o no llega al Worker correctamente. Faltan validacion HTTPS y persistencia remota.
 
 ## Task index
 | Tarea | Estado | Salida |
@@ -60,16 +60,16 @@ T-002 + T-006 + T-007 + T-011 + T-012 -> T-015 -> T-016
 ```
 
 ## READY
-No tareas TODO derivadas READY. T-016 sigue BLOCKED: XPO_LOGIN_KEY existe como binding plain_text en la version dashboard de Production (auditoria API 39615897041), debe rotarse y recrearse como Secret/secret_text. Siguen pendientes ruta HTTPS y pruebas de persistencia reales. La credencial de despliegue XPO en GitHub ya esta configurada; no volver a pedirla ni recrear Worker/D1. El usuario autorizo el alojamiento, no la carga de datos corporativos reales. T-008 mantiene el bloqueo de aceptacion operativa y T-013 espera fuentes reales. No volver a pedir XLS original.
+No tareas TODO derivadas READY. T-016 sigue BLOCKED: auditoria 39616516566 (intento 2) confirma XPO_LOGIN_KEY tipo secret_text en Production, pero el runtime devuelve HTTP 503 de clave ausente/no valida en prueba temporal 39624439731. Hay que generar clave nueva de alta entropia 48+ caracteres, repetir smoke y despues verificar HTTPS y D1 remota. La credencial de despliegue XPO en GitHub ya esta configurada; no volver a pedirla ni recrear Worker/D1. El usuario autorizo el alojamiento, no la carga de datos corporativos reales. T-008 mantiene el bloqueo de aceptacion operativa y T-013 espera fuentes reales. No volver a pedir XLS original.
 
 ## BLOCKED
-T-008: faltan ofertas y pegado Wtransnet aceptados por operador. T-014: equipo objetivo no instalado y gates previos pendientes. T-016: XPO_LOGIN_KEY fue guardado con tipo inseguro plain_text en Cloudflare Production, requiere rotacion a Secret/secret_text; faltan una ruta segura habilitada y pruebas reales HTTPS/D1 (sin datos corporativos). Version subida y binding DB verificados; no equivale a una app funcional. Cloudflare MCP no esta disponible en esta sesion; audit alternativo via GitHub Actions.
+T-008: faltan ofertas y pegado Wtransnet aceptados por operador. T-014: equipo objetivo no instalado y gates previos pendientes. T-016: tipo secret_text correcto, pero runtime de Cloudflare devuelve 503 en login por clave ausente/invalida. Se requiere reemplazo del valor mediante canal privado y posterior aceptacion HTTPS/D1 sin datos reales. Version subida y binding DB verificados; no equivale a una app funcional. Cloudflare MCP no esta disponible en esta sesion; audit alternativo via GitHub Actions.
 
 ## Current Epoch
-Epoca 3, claim unico xpo-20261020-cloudflare. T-015 DONE. Worker xpo-load-studio con version ed97eb4f-e231-40dd-a57e-63220a363da6 alojada; D1 xpo-load-studio-db en la UE; token dedicado en GitHub Actions. Audit run 39615897041: ultima version (fuente dashboard) con XPO_LOGIN_KEY presente como plain_text, NO secret_text. Nunca se leyo su valor. workers.dev y previews deshabilitados. No hay URL HTTPS aceptada ni prueba remota de D1. Totales sin cambios: 12 DONE, 1 REVIEW, 3 BLOCKED.
+Epoca 3, claim unico xpo-20261020-cloudflare. T-015 DONE. Worker xpo-load-studio con version ed97eb4f-e231-40dd-a57e-63220a363da6 alojada; D1 xpo-load-studio-db en la UE; token dedicado en GitHub Actions. Audit run 39616516566 intento 2: XPO_LOGIN_KEY ya secret_text, D1 y limiter activos; smoke 39624439731: HTTPS /login devuelve 503 (valor invalido o no accesible). Todas las pruebas revirtieron workers.dev a OFF. Ninguna leyo el secreto. workers.dev y previews deshabilitados. No hay URL HTTPS aceptada ni prueba remota de D1. Totales sin cambios: 12 DONE, 1 REVIEW, 3 BLOCKED.
 
 ## Next execution
-Operador: sustituir XPO_LOGIN_KEY de tipo Text por un nuevo Secret en Cloudflare Production y rotar la clave anterior (no en GitHub/chat), guardando la nueva en gestor de contrasenas. Controller: repetir audit read-only, comprobar secreto/version y preparar activacion segura de una ruta HTTPS; despues ejecutar pruebas remotas de acceso, render, TSV, D1, dedup, logout y persistencia usando solo datos sinteticos. No habilitar URL si no existe el Secret. No importar datos reales, comprar planes, tocar Evenio ni fusionar PR automaticamente. CI debe acompañar todo cambio nuevo de codigo.
+Operador: reestablecer el valor de XPO_LOGIN_KEY (tipo Secret) con clave aleatoria nueva de 48+ caracteres y al menos 12 distintos, en gestor de contrasenas; no introducirla en chat. Si existe XPO_LOGIN_KEY1 tipo Text, eliminar ese binding. Controller: repetir audit read-only, comprobar secreto/version y preparar activacion segura de una ruta HTTPS; despues ejecutar pruebas remotas de acceso, render, TSV, D1, dedup, logout y persistencia usando solo datos sinteticos. No habilitar URL si no existe el Secret. No importar datos reales, comprar planes, tocar Evenio ni fusionar PR automaticamente. CI debe acompañar todo cambio nuevo de codigo.
 
 ## Evidencia cloud conectada
 
