@@ -1,0 +1,115 @@
+name: XPO Cloudflare - read-only release audit
+
+# Audits only XPO's existing Cloudflare Worker.
+# Does not deploy, enable routes, read secret values, or modify data.
+on:
+  push:
+    branches:
+      - feat/cloudflare-deployment
+    paths:
+      - '.github/workflows/xpo-cloudflare-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    if: github.repository == 'GabrielValverdeBaez/XPO-Operations' && github.ref == 'refs/heads/feat/cloudflare-deployment'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect version, deployment and login secret metadata
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.XPO_CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+          ACCOUNT = '0054188c07d3b5fe7cb20fc4f71dc212'
+          WORKER = 'xpo-load-studio'
+          prefix = f'https://api.cloudflare.com/client/v4/accounts/{ACCOUNT}/workers/scripts/{WORKER}'
+          token = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          if not token:
+              raise SystemExit('FAIL: missing dedicated XPO_CLOUDFLARE_API_TOKEN in GitHub secrets')
+
+          def get_resource(suffix):
+              request = urllib.request.Request(
+                  prefix + suffix,
+                  headers={
+                      'Authorization': 'Bearer ' + token,
+                      'Accept': 'application/json',
+                  },
+                  method='GET',
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      document = json.load(response)
+              except urllib.error.HTTPError as exc:
+                  return {'available': False, 'reason': 'HTTP ' + str(exc.code)}
+              except (urllib.error.URLError, TimeoutError) as exc:
+                  return {'available': False, 'reason': type(exc).__name__}
+              if document.get('success') is not True:
+                  codes = [str(item.get('code', '?')) for item in document.get('errors', [])]
+                  return {'available': False, 'reason': 'API ' + ','.join(codes[:3])}
+              return {'available': True, 'result': document.get('result')}
+
+          version_reply = get_resource('/versions?per_page=2')
+          deployment_reply = get_resource('/deployments?per_page=2')
+          secret_reply = get_resource('/secrets')
+
+          def items(reply, key):
+              if not reply['available']:
+                  return None
+              result = reply['result']
+              if isinstance(result, list):
+                  return result
+              if isinstance(result, dict):
+                  candidate = result.get(key)
+                  return candidate if isinstance(candidate, list) else []
+              return []
+
+          versions = items(version_reply, 'items')
+          deployments = items(deployment_reply, 'deployments')
+          secrets = items(secret_reply, 'items')
+          latest = versions[0].get('id', 'unknown') if versions else None
+          login = None if secrets is None else any(
+              isinstance(value, dict) and value.get('name') == 'XPO_LOGIN_KEY'
+              for value in secrets
+          )
+
+          def status(value, missing_label='unknown'):
+              return missing_label if value is None else ('yes' if value else 'no')
+
+          summary = [
+              '## XPO Load Studio: remote metadata audit',
+              '',
+              'Target: `xpo-load-studio` (XPO account only).',
+              '',
+              '| Check | Result |',
+              '|---|---|',
+              f"| Version available | {status(bool(versions) if versions is not None else None)} |",
+              f"| Latest version ID | `{latest or 'not available'}` |",
+              f"| Deployment record exists | {status(bool(deployments) if deployments is not None else None)} |",
+              f"| Production login secret configured | {status(login)} |",
+              '',
+              'Only metadata was queried. No secret values, D1 records, or login requests were accessed.',
+              'A version is **not** proof of an active public route or successful HTTPS authentication.',
+              'Do not enable the production URL until authentication and privacy are checked.',
+          ]
+          for name, reply in [('versions', version_reply), ('deployments', deployment_reply), ('secrets', secret_reply)]:
+              if not reply['available']:
+                  summary.append(f'- {name}: {reply["reason"]} (status unknown)')
+          output = '\n'.join(summary)
+          print(output)
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(output + '\n')
+          # Never fail only because the secret has not yet been set: this is
+          # a read-only audit, not authorization to make a release public.
+          if versions is None and deployments is None and secrets is None:
+              raise SystemExit('Cloudflare metadata could not be read; see the HTTP/API codes above')
+          PY
