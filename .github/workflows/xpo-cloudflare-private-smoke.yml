@@ -77,8 +77,16 @@ jobs:
               except urllib.error.HTTPError as err:
                   resp = err
               try:
-                  resp.read(128) # Never log response bodies
-                  return resp.status,{k.lower():v for k,v in resp.headers.items()}
+                  raw=resp.read(160)
+                  result_headers={k.lower():v for k,v in resp.headers.items()}
+                  if (path=='/login' and resp.status==403
+                          and result_headers.get('server')=='cloudflare'
+                          and result_headers.get('content-type','').startswith('text/plain')):
+                      # Public Cloudflare error message, sanitized to plain ASCII.
+                      import re
+                      hint=re.sub('[^A-Za-z0-9 .,:()_-]',' ',raw.decode('ascii','ignore'))[:120]
+                      status['edge-403-diagnostic']=hint.strip()
+                  return resp.status,result_headers
               finally:
                   resp.close()
 
