@@ -115,6 +115,11 @@ jobs:
                   settings_bindings = binding_map(values)
           login_version = None if latest_bindings is None else latest_bindings.get('XPO_LOGIN_KEY') in ('secret_text', 'secret_key')
           login_settings = None if settings_bindings is None else settings_bindings.get('XPO_LOGIN_KEY') in ('secret_text', 'secret_key')
+          latest_key_exists = None if latest_bindings is None else 'XPO_LOGIN_KEY' in latest_bindings
+          latest_key_type = (latest_bindings or {}).get('XPO_LOGIN_KEY')
+          if latest_key_type not in ('secret_text', 'secret_key', 'plain_text', None):
+              latest_key_type = 'unexpected type'
+          latest_source = versions[0].get('metadata', {}).get('source', 'unknown') if versions and isinstance(versions[0], dict) else 'unknown'
           has_db = None if latest_bindings is None else latest_bindings.get('DB') == 'd1'
           has_limiter = None if latest_bindings is None else 'LOGIN_LIMITER' in latest_bindings
           active_versions = deployments[0].get('versions', []) if deployments and isinstance(deployments[0], dict) else []
@@ -136,7 +141,10 @@ jobs:
               '|---|---|',
               f"| Version available | {status(bool(versions) if versions is not None else None)} |",
               f"| Latest version ID | `{latest or 'not available'}` |",
+              f"| Latest version source | `{latest_source}` |",
               f"| Deployment record exists | {status(bool(deployments) if deployments is not None else None)} |",
+              f"| XPO_LOGIN_KEY present as ANY binding in latest version | {status(latest_key_exists)} |",
+              f"| XPO_LOGIN_KEY binding kind (not the value) | `{latest_key_type or 'absent'}` |",
               f"| Login Secret in **latest version bindings** | {status(login_version)} |",
               f"| Login Secret in script settings | {status(login_settings)} |",
               f"| Login Secret in current deployment versions | {status(active_has_login)} |",
