@@ -71,7 +71,9 @@ jobs:
                   return None
           opener = urllib.request.build_opener(NoRedirect())
           def probe(path, method='GET', headers=None, data=None):
-              req = urllib.request.Request(origin+path, method=method, headers=headers or {},data=data)
+              safe_headers={'User-Agent':'XPO-Load-Studio-Security-Audit/1.0'}
+              safe_headers.update(headers or {})
+              req = urllib.request.Request(origin+path, method=method, headers=safe_headers, data=data)
               try:
                   resp = opener.open(req,timeout=20)
               except urllib.error.HTTPError as err:
