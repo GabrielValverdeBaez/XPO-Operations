@@ -1,0 +1,220 @@
+name: XPO Cloudflare - bounded private HTTPS smoke
+
+# Reversible release experiment: briefly activate only XPO's production workers.dev,
+# test anonymous access controls, then disable the route in finally.
+on:
+  push:
+    branches: ['feat/cloudflare-deployment']
+    paths: ['.github/workflows/xpo-cloudflare-private-smoke.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xpo-cloudflare-production
+  cancel-in-progress: false
+
+jobs:
+  private-smoke:
+    if: github.repository == 'GabrielValverdeBaez/XPO-Operations' && github.ref == 'refs/heads/feat/cloudflare-deployment'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check secret and HTTPS controls, automatically restore private routing
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.XPO_CLOUDFLARE_API_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.request
+          from pathlib import Path
+
+          account = '0054188c07d3b5fe7cb20fc4f71dc212'
+          api = f'https://api.cloudflare.com/client/v4/accounts/{account}/workers/scripts/xpo-load-studio'
+          origin = 'https://xpo-load-studio.gabriel-valverde-baez.workers.dev'
+          token = os.environ.get('CLOUDFLARE_API_TOKEN')
+          if not token: raise SystemExit('Missing XPO deploy credential')
+          status = {}
+          errors = []
+          toggled = False
+          restored = False
+
+          def cloud(suffix, method='GET', body=None):
+              data = None if body is None else json.dumps(body).encode()
+              headers = {'Authorization':'Bearer '+token, 'Accept':'application/json'}
+              if data is not None: headers['Content-Type']='application/json'
+              req = urllib.request.Request(api+suffix, data=data, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=25) as response:
+                      doc = json.load(response)
+              except urllib.error.HTTPError as exc:
+                  raise RuntimeError('Cloudflare API HTTP '+str(exc.code)) from None
+              if doc.get('success') is not True:
+                  raise RuntimeError('Cloudflare API returned failure (redacted)')
+              return doc.get('result')
+
+          def rows(value, key):
+              return value if isinstance(value,list) else (value.get(key,[]) if isinstance(value,dict) else [])
+
+          def bindings(ident):
+              obj = cloud('/versions/'+ident)
+              resources = obj.get('resources',{}) if isinstance(obj,dict) else {}
+              bs = resources.get('bindings',[]) if isinstance(resources,dict) else []
+              if isinstance(bs,dict):
+                  return {k:(v.get('type') if isinstance(v,dict) else None) for k,v in bs.items()}
+              if isinstance(bs,list):
+                  return {v.get('name'):v.get('type') for v in bs if isinstance(v,dict)}
+              raise RuntimeError('Unrecognized binding structure')
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, msg, headers, newurl):
+                  return None
+          opener = urllib.request.build_opener(NoRedirect())
+          def probe(path, method='GET', headers=None, data=None):
+              safe_headers={'User-Agent':'XPO-Load-Studio-Security-Audit/1.0'}
+              safe_headers.update(headers or {})
+              req = urllib.request.Request(origin+path, method=method, headers=safe_headers, data=data)
+              try:
+                  resp = opener.open(req,timeout=20)
+              except urllib.error.HTTPError as err:
+                  resp = err
+              try:
+                  raw=resp.read(256)
+                  result_headers={k.lower():v for k,v in resp.headers.items()}
+                  if (path=='/login' and resp.status==503
+                          and result_headers.get('content-type','').startswith('application/json')):
+                      try:
+                          detail=json.loads(raw.decode('utf-8')).get('detail','')
+                          if isinstance(detail,str) and detail.startswith('Acceso cerrado. Configurar XPO_LOGIN_KEY'):
+                              status['app-reported-login-key-problem']='missing-or-invalid-secret-value'
+                          else:
+                              status['app-reported-login-key-problem']='other-runtime-503'
+                      except (ValueError, UnicodeError):
+                          status['app-reported-login-key-problem']='nonstandard-503'
+                  if (path=='/login' and resp.status==403
+                          and result_headers.get('server')=='cloudflare'
+                          and result_headers.get('content-type','').startswith('text/plain')):
+                      # Public Cloudflare error message, sanitized to plain ASCII.
+                      import re
+                      hint=re.sub('[^A-Za-z0-9 .,:()_-]',' ',raw.decode('ascii','ignore'))[:120]
+                      status['edge-403-diagnostic']=hint.strip()
+                  return resp.status,result_headers
+              finally:
+                  resp.close()
+
+          try:
+              versions=rows(cloud('/versions?per_page=1'),'items')
+              deploys=rows(cloud('/deployments?per_page=1'),'deployments')
+              if not versions or not deploys:
+                  raise RuntimeError('No hosted XPO version or deployment')
+              live=deploys[0].get('versions',[])
+              ids=[v.get('version_id') for v in live if isinstance(v,dict) and v.get('version_id')]
+              if not ids:
+                  raise RuntimeError('No active deployed version identifiers')
+              for ident in set([versions[0]['id']]+ids):
+                  bs=bindings(ident)
+                  if bs.get('XPO_LOGIN_KEY') != 'secret_text':
+                      raise RuntimeError('Security gate: XPO login binding is not secret_text')
+                  if bs.get('DB') != 'd1' or 'LOGIN_LIMITER' not in bs or 'ASSETS' not in bs:
+                      raise RuntimeError('Security gate: required D1, limiter or assets missing')
+              route=cloud('/subdomain')
+              if route.get('enabled') is not False or route.get('previews_enabled') is not False:
+                  raise RuntimeError('Initial private routing state is not OFF')
+              status['preflight']='PASS (version, secret, D1, limiter, assets)'
+              toggled=True
+              enabled=cloud('/subdomain','POST',{'enabled':True,'previews_enabled':False})
+              if enabled.get('enabled') is not True or enabled.get('previews_enabled') is not False:
+                  raise RuntimeError('Production URL was not enabled as expected')
+              ready=False
+              observed={}
+              last_headers={}
+              for _ in range(18):
+                  try:
+                      code,header=probe('/login')
+                      marker='HTTP '+str(code)
+                      observed[marker]=observed.get(marker,0)+1
+                      last_headers={k:header.get(k,'') for k in (
+                          'server','content-type','cf-mitigated','location',
+                          'x-frame-options','cache-control','x-robots-tag','via'
+                      ) if header.get(k)}
+                      if code==200:
+                          ready=True
+                          break
+                      if code==403 and observed[marker]>=5:
+                          break  # Persistent forbidden: avoid a long exposure window
+                      if code==503 and observed[marker]>=5:
+                          break  # Persistent app unavailability, fail closed quickly
+                  except (urllib.error.URLError,TimeoutError) as exc:
+                      marker=type(exc).__name__
+                      observed[marker]=observed.get(marker,0)+1
+                  time.sleep(4)
+              status['login-readiness-observations']=observed
+              status['login-response-safe-headers']=last_headers
+              if not ready:
+                  raise RuntimeError('Login page not ready; see safe HTTP status counts')
+              if 'text/html' not in header.get('content-type',''):
+                  raise RuntimeError('Login content-type mismatch')
+              expected_headers={'cache-control':'no-store','x-frame-options':'DENY',
+                  'x-content-type-options':'nosniff'}
+              for k,v in expected_headers.items():
+                  if v.lower() not in header.get(k,'').lower():
+                      raise RuntimeError('Security header missing: '+k)
+              if 'frame-ancestors' not in header.get('content-security-policy',''):
+                  raise RuntimeError('CSP frame restrictions missing')
+              if 'max-age=' not in header.get('strict-transport-security',''):
+                  raise RuntimeError('HSTS header missing')
+
+              for path,expected in [('/',303),('/index.html',303),('/static/app.js',303),
+                        ('/api/history',401),('/api/config',401),('/api/health',401),('/login.js',200)]:
+                  code,hdr=probe(path)
+                  status[path]=code
+                  if code!=expected:
+                      raise RuntimeError(path+': expected HTTP '+str(expected)+', got '+str(code))
+                  if code==303 and hdr.get('location')!='/login':
+                      raise RuntimeError(path+': wrong unauthenticated redirect')
+              bad=json.dumps({'password':'intentionally-invalid-smoke-value-XPO-9182'}).encode()
+              code,hdr=probe('/auth/login','POST',{'Origin':origin,'Content-Type':'application/json'},bad)
+              status['wrong-password']=code
+              if code!=401 or 'set-cookie' in hdr:
+                  raise RuntimeError('Wrong-password response not secure')
+              code,_=probe('/auth/login','POST',{'Content-Type':'application/json'},bad)
+              status['missing-origin']=code
+              if code!=403: raise RuntimeError('Missing Origin was not rejected')
+              code,_=probe('/auth/login','POST',{'Origin':'https://invalid.example','Content-Type':'application/json'},bad)
+              status['cross-origin']=code
+              if code!=403: raise RuntimeError('Foreign Origin was not rejected')
+              status['anonymous-lockdown']='PASS'
+          except Exception as exc:
+              errors.append(type(exc).__name__+': '+str(exc)[:250])
+          finally:
+              if toggled:
+                  for attempt in range(3):
+                      try:
+                          cloud('/subdomain','POST',{'enabled':False,'previews_enabled':False})
+                          check=cloud('/subdomain')
+                          if check.get('enabled') is False and check.get('previews_enabled') is False:
+                              restored=True
+                              break
+                      except Exception:
+                          pass
+                      time.sleep(3)
+              else:
+                  try:
+                      check=cloud('/subdomain')
+                      restored=check.get('enabled') is False and check.get('previews_enabled') is False
+                  except Exception: pass
+              status['route-off-after-test']=restored
+              if not restored:
+                  errors.append('CRITICAL: route closure not verified. Disable XPO workers.dev in Cloudflare dashboard.')
+              print('XPO HTTPS BOUNDED TEST: '+('FAIL' if errors else 'PASS'))
+              for key,value in status.items():print(key+': '+str(value))
+              for error in errors: print('BLOCKER: '+error)
+              try:
+                  summary = ['## XPO private HTTPS smoke','Result: '+('FAIL' if errors else 'PASS'),'']
+                  summary.extend([key+': '+str(value) for key,value in status.items()])
+                  summary.extend(['Blocker: '+error for error in errors])
+                  Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(chr(10).join(summary)+chr(10))
+              except Exception: pass
+          if errors:
+              raise SystemExit('Bounded security test failed. See nonsecret summary.')
+          PY

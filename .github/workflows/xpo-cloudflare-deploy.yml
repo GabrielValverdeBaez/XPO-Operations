@@ -1,0 +1,159 @@
+name: XPO Load Studio - Cloudflare deployment
+
+# Runs entirely on GitHub-hosted Ubuntu. Never uses the Mac mini or workstation.
+# A push is safe without the XPO-specific token: it skips deployment.
+# Documentation and workflow edits do not automatically publish a new version.
+on:
+  push:
+    branches:
+      - feat/cloudflare-deployment
+    paths:
+      - 'cloud_adapter/**'
+      - 'cloud_assets/**'
+      - 'loadstudio/**'
+      - 'static/**'
+      - 'worker.py'
+      - 'wrangler.jsonc'
+      - 'pyproject.toml'
+      - 'package.json'
+      - 'scripts/build_cloudflare.py'
+      - 'scripts/smoke_cloudflare.py'
+      - 'tests/**'
+      - 'evidence/template-audit.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xpo-cloudflare-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Validate and deploy private XPO Worker
+    # Never run deployment code for another repository, branch, or PR.
+    if: github.repository == 'GabrielValverdeBaez/XPO-Operations' && github.ref == 'refs/heads/feat/cloudflare-deployment'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check dedicated XPO deployment token
+        id: gate
+        env:
+          XPO_TOKEN: ${{ secrets.XPO_CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -n "$XPO_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Publication paused::Create the dedicated XPO Cloudflare API token and store it as repository secret XPO_CLOUDFLARE_API_TOKEN. No deployment attempted."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          python-version: '3.13'
+
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          node-version: '22'
+
+      - uses: astral-sh/setup-uv@v6
+        if: steps.gate.outputs.enabled == 'true'
+
+      - name: Install test/build dependencies
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pip install uv==0.13.3
+          npm install --ignore-scripts
+
+      - name: Run tests and Project Route checks
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          python -m pytest -q
+          python scripts/check_route.py
+          node --check static/app.js
+          node --check cloud_assets/login.js
+          node --check cloud_assets/cloud.js
+
+      - name: Build allowlisted XPO deployment
+        if: steps.gate.outputs.enabled == 'true'
+        run: python scripts/build_cloudflare.py
+
+      - name: Verify destination, privacy and bindings
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          config = json.loads(Path('dist/cloudflare/wrangler.jsonc').read_text())
+          assert config['name'] == 'xpo-load-studio'
+          assert config['account_id'] == '0054188c07d3b5fe7cb20fc4f71dc212'
+          assert config['workers_dev'] is False
+          assert config['preview_urls'] is False
+          assert len(config['d1_databases']) == 1
+          assert config['d1_databases'][0]['binding'] == 'DB'
+          assert config['d1_databases'][0]['database_id'] == 'e8b2efad-4eef-4263-b2cc-5dfc636c469e'
+          assert any(b['name'] == 'LOGIN_LIMITER' for b in config['ratelimits'])
+          assert 'XPO_LOGIN_KEY' not in json.dumps(config)
+          print('PASS: XPO-only worker, D1, limiter, no public Worker URL or previews')
+          PY
+
+      - name: Confirm Python Worker can bundle (no deployment)
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          cd dist/cloudflare
+          uv run pywrangler deploy --dry-run
+
+      - name: Enforce Cloudflare Production Secret before any hosted upload
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.XPO_CLOUDFLARE_API_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          prefix = 'https://api.cloudflare.com/client/v4/accounts/0054188c07d3b5fe7cb20fc4f71dc212/workers/scripts/xpo-load-studio'
+          token = os.environ['CLOUDFLARE_API_TOKEN']
+          def get(suffix):
+              with urllib.request.urlopen(urllib.request.Request(prefix + suffix, headers={'Authorization': 'Bearer ' + token}), timeout=25) as res:
+                  payload = json.load(res)
+              if not payload.get('success'):
+                  raise RuntimeError('Cloudflare metadata API returned an error')
+              return payload['result']
+          versions = get('/versions?per_page=1')
+          versions = versions if isinstance(versions, list) else versions.get('items', [])
+          if not versions:
+              raise RuntimeError('No hosted XPO version available; refuse unattended deployment')
+          bindings = get('/versions/' + versions[0]['id'])['resources']['bindings']
+          if isinstance(bindings, list):
+              kinds = {b.get('name'): b.get('type') for b in bindings if isinstance(b, dict)}
+          elif isinstance(bindings, dict):
+              kinds = {k: (v.get('type') if isinstance(v, dict) else None) for k, v in bindings.items()}
+          else:
+              raise RuntimeError('Unrecognized Cloudflare bindings format')
+          if kinds.get('XPO_LOGIN_KEY') != 'secret_text':
+              raise RuntimeError('SECURITY BLOCK: XPO_LOGIN_KEY must be a Production Secret, never plain_text or absent')
+          if kinds.get('DB') != 'd1' or 'LOGIN_LIMITER' not in kinds:
+              raise RuntimeError('SECURITY BLOCK: Cloudflare D1 or login limiter binding missing')
+          print('PASS: production login binding is secret_text; XPO D1 and limiter present; no secret value read')
+          PY
+
+      - name: Publish initial private, closed Worker
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.XPO_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '0054188c07d3b5fe7cb20fc4f71dc212'
+          WRANGLER_SEND_METRICS: 'false'
+        run: npm run deploy
+
+      - name: Explain remaining hosted acceptance
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          echo "::notice title=Deployment is not acceptance::Before enabling a route, add XPO_LOGIN_KEY as a Cloudflare Production Secret, verify anonymous access is blocked, confirm DB binding, then test with synthetic data only."

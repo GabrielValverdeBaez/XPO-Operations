@@ -1,0 +1,3 @@
+'use strict';
+const form=document.getElementById('login'),status=document.getElementById('status'),enter=document.getElementById('enter');
+form.addEventListener('submit',async event=>{event.preventDefault();enter.disabled=true;status.textContent='Comprobando acceso...';try{const response=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('key').value})});const data=await response.json();if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'No se pudo iniciar sesion');document.getElementById('key').value='';location.replace('/');}catch(error){status.textContent=error.message;}finally{enter.disabled=false;}});

@@ -4,44 +4,46 @@ id: route-main
 project: xpo-load-studio
 status: active
 baseline_version: '1.0'
-current_version: '1.2'
+current_version: '1.5'
 depth: M
 research_level: R1
 execution_strategy:
 - sequential
 - parallel
 - iterative
-epoch: 2
+epoch: 3
 state_owner: controller
 quality_gate: PASS
 created_at: '2026-10-20'
-updated_at: '2026-10-20'
+updated_at: '2026-10-21'
 ---
 # XPO Load Studio - Ruta de desarrollo
 
 ## Strategy
-Continuar desarrollo reversible en rama, con evidencia antes de DONE. La aceptacion comercial y despliegue siguen siendo gates de liberacion, no requisitos para escribir prototipos. Replan R-001 en docs/DECISIONS.md conserva objetivos y limites originales. No existe un bucle de agentes ejecutandose entre conversaciones.
+Continuar desarrollo reversible en rama, con evidencia antes de DONE. La aceptacion comercial y despliegue siguen siendo gates de liberacion, no requisitos para escribir prototipos. Replan R-001 en docs/DECISIONS.md conserva objetivos y limites originales. La ampliacion cloud autorizada por el operador conserva la version local y se registra en docs/CLOUDFLARE_DEPLOYMENT.md. No existe un bucle de agentes ejecutandose entre conversaciones.
 
 ## Milestones
-Fase 1: FOTE/manual, reglas y doble salida (motor y extensiones de ruta/metraje implementados; aceptacion real pendiente). Fase 2: entradas flexibles, XLSX y editor (implementados dentro de la gramatica/formatos documentados). Fase 3: historial, OCR y tarifas (historial probado; prototipos OCR/tarifas sin calibracion real). Operacion: Mac mini/Tailscale pendiente.
+Fase 1: FOTE/manual, reglas y doble salida (motor y extensiones de ruta/metraje implementados; aceptacion real pendiente). Fase 2: entradas flexibles, XLSX y editor (implementados dentro de la gramatica/formatos documentados). Fase 3: historial, OCR y tarifas (historial probado; prototipos OCR/tarifas sin calibracion real). Instalacion Mac mini/Tailscale pendiente e independiente. Cloudflare: integracion real workerd/D1 local PASS; Worker version ed97eb4f-e231-40dd-a57e-63220a363da6 subida desde GitHub Actions y auditada con la API; no hay ruta publica autorizada. T-016 BLOCKED por 503 en el runtime del login: secret_text existe pero su valor no supera key_valid o no llega al Worker correctamente. Faltan validacion HTTPS y persistencia remota.
 
 ## Task index
 | Tarea | Estado | Salida |
 |---|---|---|
-| [T-001](TASKS/T-001.md) Auditar fuente XLS y consolidar contrato tecnico | DONE | `evidence/template-audit.json` |
-| [T-002](TASKS/T-002.md) Modelo normalizado tipado | DONE | `loadstudio/models.py` |
-| [T-003](TASKS/T-003.md) Contratos ES/EN y TSV | DONE | `docs/wtransnet-schema.md` |
-| [T-004](TASKS/T-004.md) Spike y eleccion de arquitectura local | DONE | `docs/DECISIONS.md` |
-| [T-005](TASKS/T-005.md) Parser FOTE y diagnostico | DONE | `loadstudio/ingest.py` |
-| [T-006](TASKS/T-006.md) Motor XPO y extensiones de reglas | DONE | `loadstudio/engine.py` |
-| [T-007](TASKS/T-007.md) Interfaz de revision y resultados | DONE | `static/index.html` |
-| [T-008](TASKS/T-008.md) Aceptacion operativa MVP | BLOCKED | `evidence/operational-acceptance.md` |
-| [T-009](TASKS/T-009.md) Parser de texto con gramatica acotada | DONE | `docs/USAGE.md` |
-| [T-010](TASKS/T-010.md) Importador XLSX revisable | DONE | `loadstudio/ingest.py#import_rows` |
-| [T-011](TASKS/T-011.md) Editor de reglas versionadas | DONE | `loadstudio/store.py#update_rules` |
-| [T-012](TASKS/T-012.md) Historial SQLite y copias | DONE | `loadstudio/store.py` |
-| [T-013](TASKS/T-013.md) OCR y tarifas - prototipos verificables | REVIEW | `evidence/ocr-smoke.json` |
-| [T-014](TASKS/T-014.md) Instalacion privada Mac mini y aceptacion final | BLOCKED | `evidence/deployment-acceptance.md` |
+| [T-001](TASKS/T-001.md) Auditar fuente XLS y consolidar contrato tecnico | DONE | evidence/template-audit.json |
+| [T-002](TASKS/T-002.md) Modelo normalizado tipado | DONE | loadstudio/models.py |
+| [T-003](TASKS/T-003.md) Contratos ES/EN y TSV | DONE | docs/wtransnet-schema.md |
+| [T-004](TASKS/T-004.md) Spike y eleccion de arquitectura local | DONE | docs/DECISIONS.md |
+| [T-005](TASKS/T-005.md) Parser FOTE y diagnostico | DONE | loadstudio/ingest.py |
+| [T-006](TASKS/T-006.md) Motor XPO y extensiones de reglas | DONE | loadstudio/engine.py |
+| [T-007](TASKS/T-007.md) Interfaz de revision y resultados | DONE | static/index.html |
+| [T-008](TASKS/T-008.md) Aceptacion operativa MVP | BLOCKED | evidence/operational-acceptance.md pendiente |
+| [T-009](TASKS/T-009.md) Parser de texto con gramatica acotada | DONE | docs/USAGE.md |
+| [T-010](TASKS/T-010.md) Importador XLSX revisable | DONE | loadstudio/ingest.py#import_rows |
+| [T-011](TASKS/T-011.md) Editor de reglas versionadas | DONE | loadstudio/store.py#update_rules |
+| [T-012](TASKS/T-012.md) Historial SQLite y copias | DONE | loadstudio/store.py |
+| [T-013](TASKS/T-013.md) OCR y tarifas - prototipos verificables | REVIEW | evidence/ocr-smoke.json |
+| [T-014](TASKS/T-014.md) Instalacion privada Mac mini y aceptacion final | BLOCKED | evidence/deployment-acceptance.md pendiente |
+| [T-015](TASKS/T-015.md) Integracion privada Worker Python y D1 | DONE | docs/CLOUDFLARE_DEPLOYMENT.md y artifact CI |
+| [T-016](TASKS/T-016.md) Despliegue Cloudflare y aceptacion HTTPS persistente | BLOCKED | Evidencia remota pendiente |
 
 ## Execution Graph
 
@@ -54,25 +56,29 @@ T-001 -> T-002 -> T-003 -> T-004 -> T-005 -> T-007
                                   |-> T-012 -> T-013
 T-006 + T-007 -> T-008
 T-008 + T-013 -> T-014
+T-002 + T-006 + T-007 + T-011 + T-012 -> T-015 -> T-016
 ```
 
 ## READY
-T-006 y T-007 completadas con regresiones y navegador conectado. No hay nuevas tareas TODO derivadas READY. T-008 tiene sus dependencias tecnicas resueltas, pero mantiene el bloqueo externo de aceptacion operativa. T-013 espera evidencia de capturas/tarifas reales; no fabricar datos. No volver a pedir el XLS original.
+No tareas TODO derivadas READY. T-016 sigue BLOCKED: auditoria 39616516566 (intento 2) confirma XPO_LOGIN_KEY tipo secret_text en Production, pero el runtime devuelve HTTP 503 de clave ausente/no valida en prueba temporal 39624439731. Hay que generar clave nueva de alta entropia 48+ caracteres, repetir smoke y despues verificar HTTPS y D1 remota. La credencial de despliegue XPO en GitHub ya esta configurada; no volver a pedirla ni recrear Worker/D1. El usuario autorizo el alojamiento, no la carga de datos corporativos reales. T-008 mantiene el bloqueo de aceptacion operativa y T-013 espera fuentes reales. No volver a pedir XLS original.
 
 ## BLOCKED
-T-008: aceptacion operativa real pendiente; no se han acreditado cinco ofertas aceptadas ni un pegado aprobado en Wtransnet. T-014: gates anteriores y equipo objetivo no instalado. El repositorio no contiene los datos privados necesarios para calibrar precios. No inventar un mercado ni declarar el servidor del Mac instalado.
+T-008: faltan ofertas y pegado Wtransnet aceptados por operador. T-014: equipo objetivo no instalado y gates previos pendientes. T-016: tipo secret_text correcto, pero runtime de Cloudflare devuelve 503 en login por clave ausente/invalida. Se requiere reemplazo del valor mediante canal privado y posterior aceptacion HTTPS/D1 sin datos reales. Version subida y binding DB verificados; no equivale a una app funcional. Cloudflare MCP no esta disponible en esta sesion; audit alternativo via GitHub Actions.
 
 ## Current Epoch
-Epoca 2, claim unico xpo-20261020-implementation. La auditoria primaria, implementacion, tests API/modelo y revision visual offline se registran en evidence/verification.md. El informe de CI debe consultarse por commit: un run antiguo de diez tests no acredita estos cambios.
+Epoca 3, claim unico xpo-20261020-cloudflare. T-015 DONE. Worker xpo-load-studio con version ed97eb4f-e231-40dd-a57e-63220a363da6 alojada; D1 xpo-load-studio-db en la UE; token dedicado en GitHub Actions. Audit run 39616516566 intento 2: XPO_LOGIN_KEY ya secret_text, D1 y limiter activos; smoke 39624439731: HTTPS /login devuelve 503 (valor invalido o no accesible). Todas las pruebas revirtieron workers.dev a OFF. Ninguna leyo el secreto. workers.dev y previews deshabilitados. No hay URL HTTPS aceptada ni prueba remota de D1. Totales sin cambios: 12 DONE, 1 REVIEW, 3 BLOCKED.
 
 ## Next execution
-Conservar la suite de 117 pruebas y el navegador conectado ya verificados sobre 2bc1e58. Continuar con la revision real de ofertas y la evaluacion de OCR/tarifas cuando existan fuentes privadas verificables. Mantener PR sin merge automatico. Al desplegar de verdad, registrar host, version, prueba de acceso privado y restauracion, sin credenciales. Preguntar solo por una regla comercial no verificable, una decision reservada o acceso al equipo que no se pueda resolver tecnicamente.
+Operador: reestablecer el valor de XPO_LOGIN_KEY (tipo Secret) con clave aleatoria nueva de 48+ caracteres y al menos 12 distintos, en gestor de contrasenas; no introducirla en chat. Si existe XPO_LOGIN_KEY1 tipo Text, eliminar ese binding. Controller: repetir audit read-only, comprobar secreto/version y preparar activacion segura de una ruta HTTPS; despues ejecutar pruebas remotas de acceso, render, TSV, D1, dedup, logout y persistencia usando solo datos sinteticos. No habilitar URL si no existe el Secret. No importar datos reales, comprar planes, tocar Evenio ni fusionar PR automaticamente. CI debe acompañar todo cambio nuevo de codigo.
 
-## Evidencia CI conectada
+## Evidencia cloud conectada
 
-GitHub Actions run [39404120752](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39404120752), job 118565768271, commit 4f4060ce15a586927f1c1e492544df986ab66ca6: SUCCESS. Pruebas 78/78, verificacion SHA de 17 fuentes, DAG, sintaxis JS y smoke_browser.py conectando navegador/API/portapapeles reales del runner. Se corrigio un uso de eval en el test, sin relajar CSP de la app. T-007 DONE. Este resultado no demuestra instalacion en Mac mini ni ofertas aceptadas por Wtransnet.
+**Hosted release real**: [run 39596676298, intento 2](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39596676298) PASS, version `ed97eb4f-e231-40dd-a57e-63220a363da6`. La subida incluyo DB, LOGIN_LIMITER y ASSETS; `No targets deployed`. [Auditoria read-only 39599178204](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39599178204) PASS historico: version inicial y metadata presentes sin Secret. [Auditoria versionada 39615897041](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39615897041): detectado XPO_LOGIN_KEY tipo plain_text en version creada desde dashboard; bloquea acceso publico. El workflow ahora exige secret_text antes de desplegar. Evidencias en docs/CLOUDFLARE_DEPLOYMENT.md. Esto NO es aceptacion HTTPS ni autoriza trafico publico.
 
+**Workerd local**: Commit ff61f8d89bbcbb1b9764d2b01c7618abea5c465d: [Cloudflare checks 39446374542](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39446374542), job 118709265212, SUCCESS; [Load Studio checks 39446374450](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39446374450), SUCCESS. Artifact cloudflare-runtime-evidence ID 12276231995. Local D1 real, auth/limitador, salida determinista y reinicio completo PASS. Esto no acredita publicacion remota.
 
-## Cierre tecnico de la extension
+## Evidencia historica preservada
 
-Run [39406835670](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39406835670), job 118574705486, head `2bc1e582fe3fe402c41ff4054494aa697833e70c`: SUCCESS. El runner prueba el merge temporal del PR `4401b47f958d8872a0c4778fb4e4548f449d2ef3`, no una fusion publicada en main. **117 tests, 19 hashes de fuentes y navegador conectado PASS**, incluidas paradas y ML por dimensiones. T-006 DONE. Totales: 11 DONE, 1 REVIEW (T-013), 2 BLOCKED (T-008/T-014). No se ha fusionado el PR ni instalado en el equipo del usuario.
+GitHub Actions [39404120752](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39404120752), job 118565768271, commit 4f4060ce15a586927f1c1e492544df986ab66ca6: SUCCESS. 78/78 pruebas, SHA de 17 fuentes, DAG, JS y navegador/API/portapapeles reales del runner. Se corrigio eval en el test sin relajar CSP. T-007 DONE; no acredita instalacion Mac ni ofertas aceptadas.
+
+Extension: [39406835670](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39406835670), job 118574705486, head 2bc1e582fe3fe402c41ff4054494aa697833e70c, SUCCESS. Merge temporal del runner 4401b47f958d8872a0c4778fb4e4548f449d2ef3, no main. 117 tests, 19 hashes y navegador conectado PASS, incluidas paradas y ML. T-006 DONE. Es evidencia historica de ese commit, no sustituto del CI actual.
