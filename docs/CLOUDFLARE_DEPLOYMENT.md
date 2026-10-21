@@ -1,102 +1,85 @@
-# XPO Load Studio - Cloudflare deployment handoff
+# XPO Load Studio — Cloudflare deployment handoff
 
-Updated: 2026-10-21. Status: **GITHUB DEPLOY TRIGGER REQUESTED / HOSTED RESULT AND ACCEPTANCE PENDING**.
+**Updated:** 2026-10-21  
+**Status:** WORKER VERSION UPLOADED / LOGIN SECRET MISSING / HTTPS OPERATIONAL ACCEPTANCE BLOCKED  
+**Project Route:** [T-016](../TASKS/T-016.md) — BLOCKED (do not mark DONE).
 
-Operator confirmed via GitHub screenshot on 2026-10-21 that the repository secret `XPO_CLOUDFLARE_API_TOKEN` was created. The secret value is inaccessible and not needed in documentation. This documentation commit intentionally triggers the restricted GitHub-hosted release workflow; verify the concrete run and Cloudflare version before updating T-016.
+## 1. Canonical deployment baseline
 
-## Browser-only deployment path (preferred for the first release)
+Repository: [GabrielValverdeBaez/XPO-Operations](https://github.com/GabrielValverdeBaez/XPO-Operations)  
+Deployment branch: `feat/cloudflare-deployment`  
+Pull request: [#4](https://github.com/GabrielValverdeBaez/XPO-Operations/pull/4) (draft, not merged)  
+Deploy workflow: [xpo-cloudflare-deploy.yml](../.github/workflows/xpo-cloudflare-deploy.yml)  
+Read-only audit workflow: [xpo-cloudflare-audit.yml](../.github/workflows/xpo-cloudflare-audit.yml)
 
-No Mac mini, SSH access or software installed on the operator workstation is needed. The feature branch contains `.github/workflows/xpo-cloudflare-deploy.yml`. GitHub-hosted Ubuntu runs the checks and the existing Python `pywrangler deploy` script; no code is rebuilt from scratch.
+Existing, dedicated Cloudflare resources (do **not** recreate or reuse Evenio resources):
 
-The workflow triggers on relevant pushes to `feat/cloudflare-deployment` (plus an optional manual dispatch where available). Before a **dedicated** repository secret named `XPO_CLOUDFLARE_API_TOKEN` exists, the deployment steps are skipped. It runs tests, a dry-run, verifies the bundle points only to the existing XPO Worker and EU D1, and refuses `workers_dev=true` and preview URLs. It does not run on pull_request events, `main`, or forks. After setting the token, a further commit to this deployment documentation or to a listed source path triggers a release. Merely saving a secret does not trigger a workflow.
-
-Operator actions, entirely via browser:
-
-1. In Cloudflare > My Profile > API Tokens, create an XPO-only deployment token using the Workers Scripts Edit permission scoped to the relevant account; grant any additional specific permission only if required by the actual deploy error. **Never** use the existing Evenio token or a global API key.
-2. Open [GitHub Actions repository secrets](https://github.com/GabrielValverdeBaez/XPO-Operations/settings/secrets/actions), choose New repository secret, name it exactly `XPO_CLOUDFLARE_API_TOKEN` and paste the token value **there only**. Do not paste it into chat, documents or a committed file. The account ID already exists in the allowlisted config and action.
-3. Once the operator confirms the secret was saved, create a documentation-only commit to this branch (with the controller), to trigger the protected release. Watch the GitHub Actions result. If credential permissions are insufficient, do not broaden them blindly; review the actual 403 and apply least privilege.
-4. With a first Worker version available, set `XPO_LOGIN_KEY` through Cloudflare Settings > Production > Variables and secrets as a **Secret** (32+ character random password). Do not store this application password in GitHub.
-5. Keep the workers.dev production URL and preview URLs **disabled** during initial publication. Only activate the production domain after the login Secret, binding, anonymous-denial and security checks are ready. Carry out remote acceptance with synthetic data before declaring T-016 DONE.
-
-The cloud dashboard currently shows the Git repository Connect button disabled before the first Worker version exists, so the first release uses GitHub-hosted Actions instead of interactive local Wrangler or Workers Builds. Cloudflare Builds may be linked later if needed. The Python application deliberately denies access when the login secret or login limiter is missing. Passing GitHub-hosted CI is not proof of remote acceptance.
-
-
-## Scope and authorization
-
-The operator explicitly authorized private Cloudflare hosting of XPO Load Studio without reliance on the Mac mini, reversible technical work, and dedicated XPO resources. Preserve the deterministic engine, local application and commercial acceptance gates. Do not merge PR #4 automatically, change other projects, purchase paid plans, send offers, or upload real operational data or credentials.
-
-## Verified integration
-
-Code commit: `ff61f8d89bbcbb1b9764d2b01c7618abea5c465d`.
-
-- Cloudflare adapter checks: [run 39446374542](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39446374542), job `118709265212`: SUCCESS.
-- Load Studio checks: [run 39446374450](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39446374450): SUCCESS.
-- Runtime evidence artifact: `cloudflare-runtime-evidence`, ID `12276231995`, digest `sha256:f03e4f3d5203d8745cffa4963735c49aa9bf8850d15de4c020b24debf9095a4b`.
-
-The final workflow tests the unmodified production adapter, without temporary diagnostics. It covers HTTPS login and protected assets/API, the real login rate limiter, deterministic ES/EN and 26-column TSV output, D1 schema bootstrap, saving, deduplication, rule revision conflicts/restoration, XLSX preview, private backup, cross-origin rejection and logout. It also stops and restarts the full workerd process and verifies persisted D1 data, rules and deduplication. Only synthetic data is used.
-
-This is actual workerd plus **local D1**, not a hosted application acceptance result. Every later code change needs its own CI result; these links are evidence for the named commit only.
-
-### Root causes corrected
-
-`workers-runtime-sdk` returns dictionary subclasses (`JsDict`). The previous exact-type check wrongly serialized those Python values back through JavaScript and lost fields such as the rate-limiter `success` value. `native()` now respects dict subclasses. The SDK already converts Python lists and unwraps D1 statement wrappers. Manually applying `pyodide.to_js()` created borrowed proxies that expired before the async batch used them; statement lists now go directly through the SDK. Regression tests cover both cases. Removing the login limiter was a temporary diagnostic, not the fix, and is no longer done.
-
-Primary source: [official Workers Python SDK RPC implementation](https://github.com/cloudflare/workers-py/blob/main/packages/runtime-sdk/src/workers/rpc.py).
-
-## Real dedicated resources
-
-Account: `0054188c07d3b5fe7cb20fc4f71dc212`, authenticated as `gabriel.valverde.baez@gmail.com`.
-
-| Resource | Verified identifier and state |
+| Resource | Identifier |
 |---|---|
-| Worker | `xpo-load-studio`, ID `9f213a235e0f402a99631cc17c4a37af` |
-| Worker release | Created, but `deployed_on = null`; no application version uploaded |
-| Public routes | workers.dev disabled; preview URLs disabled |
-| D1 | `xpo-load-studio-db`, UUID `e8b2efad-4eef-4263-b2cc-5dfc636c469e` |
-| D1 location | Jurisdiction `eu`; read replication disabled |
-| D1 connection check | Actual API query `SELECT 1 AS connection_ok` returned 200 / success / 1 |
-| Repository connection | `c4fcc3da-b670-4e13-996d-91d3b62d805b` |
-| GitHub repository | `1426684636`, GabrielValverdeBaez/XPO-Operations |
-| Branch / PR | `feat/cloudflare-deployment` / #4, unmerged |
+| Account | `0054188c07d3b5fe7cb20fc4f71dc212` |
+| Worker | `xpo-load-studio` (ID `9f213a235e0f402a99631cc17c4a37af`) |
+| D1 EU database | `xpo-load-studio-db` (UUID `e8b2efad-4eef-4263-b2cc-5dfc636c469e`) |
+| Existing GitHub repository connection | `c4fcc3da-b670-4e13-996d-91d3b62d805b` |
+| Most recent audited Worker version | `ed97eb4f-e231-40dd-a57e-63220a363da6` |
 
-The address assigned by Cloudflare is `https://xpo-load-studio.gabriel-valverde-baez.workers.dev`. **It is disabled and is not evidence of a functional hosted app.** Do not mark the deployment DONE merely because this address or Worker object exists.
+The dashboard's allocated `workers.dev` address is **not a working URL yet**. Both `workers_dev=false` and `preview_urls=false` are required by the deployment config. There is no authorized public production route at this gate.
 
-Project dashboard: https://dash.cloudflare.com/0054188c07d3b5fe7cb20fc4f71dc212/workers/services/view/xpo-load-studio/production
+## 2. Verified evidence — hosted upload
 
-## Exact remaining access gate
+[GitHub Actions run 39596676298](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39596676298), trigger commit `4deef7b3677895be143dff646afd0bd8d47ee242`:
 
-MCP OAuth can read/create Workers, D1 and the repository connection. It cannot create API tokens: the account permission-group endpoint returns HTTP 403 and explicitly states that no OAuth scope covers that endpoint. Reconnecting the same MCP does not supply a non-interactive build credential.
+- Attempt 1 failed on Cloudflare API error `10021`: `binding DB of type d1 failed to generate`. Python tests, dry-run, assets and XPO resource checks had already passed.
+- The **same job** was rerun once without changing the token, code or D1. Attempt 2 **SUCCESS** (job `119213768117`).
+- Wrangler reported `Uploaded xpo-load-studio`, `Current Version ID: ed97eb4f-e231-40dd-a57e-63220a363da6`, and `No targets deployed for xpo-load-studio`.
+- The upload logged these bindings: `DB` -> the dedicated XPO D1, `LOGIN_LIMITER` (5 requests per 60 seconds), and `ASSETS`. It did **not** prove the hosted application's login or persistence.
+- Uploading assets and a Worker version is **not** operational acceptance.
 
-No XPO build token exists. The one pre-existing build token belongs to another project and was not used, changed or copied. A build trigger has therefore **not** been created. No login secret has been set. Never extract connector credentials, copy another project's token, commit a token, or request secrets in chat.
+[Read-only Cloudflare API audit run 39599178204](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39599178204), 2026-10-21:
+- API query `GET .../versions`: version present, latest ID matches the one above.
+- API query `GET .../deployments`: deployment record present. This does **not** imply an enabled public route.
+- API query `GET .../secrets`: **`XPO_LOGIN_KEY` not present** when queried.
+- Only version/deployment metadata and secret **names** were checked; **no secret values** and **no D1 records** were accessed.
 
-### One Cloudflare dashboard setup session
+The Cloudflare ChatGPT connector returned an internal tool error during this session, so verification used the purpose-scoped Cloudflare token securely stored in GitHub Actions and read-only Cloudflare API requests. That token is **not** an app login secret.
 
-1. Open the existing `xpo-load-studio` Worker, then its Builds configuration and connect the Git repository above. Select branch `feat/cloudflare-deployment`, root `/`, and disable preview-branch builds. The API-level repository connection already exists; reuse it where offered.
-2. Generate/authorize a deployment credential dedicated to XPO using the dashboard's supported token flow. Keep permissions and scope as narrow as supported for this Worker and its existing D1 binding. Do not reuse another project's build token. Keep the free plan; stop if a purchase or paid upgrade is required.
-3. Set these commands (the application build/deploy commands are already defined in package.json):
+Previous local integration evidence remains valid for its original commits:
+- [Workerd + local D1 full integration, run 39446374542](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39446374542) PASS.
+- [Load Studio checks, run 39446374450](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39446374450) PASS.
+- Artifact `cloudflare-runtime-evidence` ID `12276231995`. Tests cover HTTPS cookies, real rate limiter, protected assets/API, deterministic ES/EN output, exact 26-column TSV, local D1 history/deduplication, revisions, XLSX and private backup, cross-origin controls and restart persistence. **All of this is local runtime evidence, not remote service acceptance.**
 
-Build command:
-```sh
-python -m pip install uv==0.13.3 && npm run build
-```
+### Relevant corrected integration issues
 
-Deploy command:
-```sh
-npm run deploy
-```
+The pinned Python SDK returns `JsDict` instances; the serializer must accept `dict` subclasses or the login rate limiter result is lost. For D1 batches, manually converting wrapped statement lists to JS broke the borrowed proxy lifetime. Production code now leaves statement conversion to the SDK. The login endpoint is fail-closed when its limit binding or login secret is absent. Regression tests and GitHub CI cover these conditions.
 
-These are the intended Workers Builds settings; execution on that hosted build image remains unverified. GitHub CI has verified the same allowlisted build and Pywrangler dry-run. If the hosted Python environment disallows pip installation, use a project-local virtual environment; do not modify system packages or other projects.
+## 3. One operator-controlled action still required
 
-4. In Worker Settings > Variables and Secrets, create `XPO_LOGIN_KEY` with type **Secret**, using a password manager's high-entropy random password of at least 32 characters. Save it privately; do not put it in GitHub, chat, build logs or plaintext variables. Without a valid secret the app deliberately returns 503 and remains closed.
+With the Worker version uploaded, go to the [XPO Worker dashboard](https://dash.cloudflare.com/0054188c07d3b5fe7cb20fc4f71dc212/workers/services/view/xpo-load-studio/production):
 
-The credential for deployment and `XPO_LOGIN_KEY` are different secrets with different purposes. The former authorizes CI upload; the latter authenticates app users. No secret values are recorded here.
+1. Open **Settings > Variables and secrets** and choose **Production**, never Previews Base.
+2. Select **Add variable** or **Add**. Type **Secret**, name exactly **`XPO_LOGIN_KEY`**.
+3. Generate a distinct random high-entropy password, at least 32 characters, using a password manager. The app rejects weak/configuration-like keys (it requires at least 12 distinct characters). Store the password in the manager.
+4. Choose **Deploy** or the dashboard's equivalent to persist the secret. **Do not** put the password in chat, GitHub, code, logs or a plaintext variable.
 
-## Hosted acceptance - still required
+The already-configured GitHub Actions secret `XPO_CLOUDFLARE_API_TOKEN` is for deployment API authorization only. It is unrelated to `XPO_LOGIN_KEY`, and must not be copied or used as the application password.
 
-After credential setup, inspect the actual build trigger and run, ensure it uses only the named XPO Worker and D1, and deploy this branch. Inspect the produced Worker version and binding IDs. Check the real HTTPS URL without credentials (private API 401, private assets redirect), then valid login (Secure/HttpOnly cookie), invalid/repeated login and cross-origin rejection. Use synthetic data only to verify parsing, rendering, saving, duplicate suppression and reading the same record after a separate Worker version deployment/restart. Confirm remote D1 holds that record, then remove only the explicitly identified synthetic test data. Verify logout, private backup, no public preview route and no credentials in artifacts/logs.
+If the dashboard still does not offer Add under Production, stop there and capture the current Settings screen; do not re-create the Worker, alter Previews Base, or paste a secret into this conversation. A controlled private secret-configuration route can then be designed.
 
-Local restart evidence is not a substitute for remote persistence evidence. Record the actual URL, version, CI build ID, HTTP results and non-secret D1 verification before marking T-016 DONE. Commercial acceptance and local Mac installation remain independent unfinished gates.
+## 4. Executor continuation after the operator step
 
-## Recovery
+1. Rerun the **read-only audit** to confirm only that the `XPO_LOGIN_KEY` binding exists. The audit never reads secret values and cannot prove a password is valid.
+2. Inspect Worker versions, D1 binding ID, rate limiter and the deployed config. Keep `workers_dev` and preview URLs off until ready.
+3. Agree a single HTTPS entry route with access protection. Enabling `workers.dev` needs a **deliberate corresponding code+CI security-gate change**; dashboard-only toggles would be overwritten by the next Wrangler deploy. Do not enable any endpoint while the key is missing.
+4. With the authorized route enabled, test anonymous `/api/history` (401), unauthenticated assets (redirect), secure+HttpOnly login cookie, invalid/repeated login (401/429), cross-origin rejection, logout and absence of secret disclosure.
+5. With **synthetic** test loads only, validate parse/render, ES/EN formatting, TSV's 26 columns, saving, history, deduplication and D1 persistence after a separate deployment. Record non-secret HTTP outcomes and D1 confirmation.
+6. Check no public preview, no logs/artifacts containing secrets. Remove only specific synthetic test records after evidence is recorded. Do not import real XPO orders unless corporate authorization for Cloudflare data handling is separately confirmed.
+7. Produce `T-016-output` with immutable URLs/run/version IDs and acceptance evidence, then consider closing T-016. Do **not** merge PR #4 automatically. T-008 commercial acceptance and T-014 Mac mini/local acceptance remain independent.
 
-Do not recreate the existing Worker, D1 or repository connection. Read their exact IDs before any write. Keep the app closed if an auth or binding check fails. No paid plans or real data imports. Resume from T-016, not from old MCP reconnection instructions. Nothing is running autonomously between conversations.
+## 5. Security and recovery
+
+No XPO real loads, spreadsheets, credentials or corporate attachments belong in public GitHub. No paid Cloudflare plans or data deletion as a debugging shortcut. Workers Builds native Git integration is optional; the existing **GitHub-hosted Actions** workflow already proved a first-version upload and needs no Mac mini or workstation CLI.
+
+The purpose-scoped deploy workflow runs on code changes in `feat/cloudflare-deployment`, not on documentation-only edits, and uses the XPO-only token and account/Worker/D1 assertions. Do not assume green CI or a version ID equals a public, authenticated, production-ready service.
+
+On future failures, inspect the actual job and binding before changing any permission. The transient `10021` recovered on exactly one identical rerun; this does not guarantee all future failures will be transient.
+
+No task is running autonomously between ChatGPT conversations. Project Route Markdown/YAML is canonical; GitHub Actions is an execution adapter.
