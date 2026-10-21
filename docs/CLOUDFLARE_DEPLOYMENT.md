@@ -1,17 +1,22 @@
 # XPO Load Studio — Cloudflare deployment handoff
 
 **Updated:** 2026-10-21  
-**Status:** WORKER VERSION UPLOADED / LOGIN BINDING IS INSECURE PLAIN_TEXT / SECRET ROTATION REQUIRED / HTTPS ACCEPTANCE BLOCKED  
+**Status:** SECRET TYPE VERIFIED / HOSTED LOGIN RETURNS 503 / NEW HIGH-ENTROPY SECRET VALUE REQUIRED / HTTPS ACCEPTANCE BLOCKED  
 **Project Route:** [T-016](../TASKS/T-016.md) — BLOCKED (do not mark DONE).
 
-## Security finding — 21 October 2026 (requires operator action)
+## Current security and runtime finding — 21 October 2026
 
-The operator added `XPO_LOGIN_KEY` in the Production dashboard, but the newer dashboard-created Worker version `42627e7d-60e9-4307-bfe4-16fdbe59c327` contains an `XPO_LOGIN_KEY` binding of type **`plain_text`**, not `secret_text`. This was confirmed independently through [GitHub Actions read-only audit 39615897041](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39615897041). **The password value was never read or printed.** D1 and rate-limiter bindings remain present.
+- Previous risk: XPO_LOGIN_KEY was initially plain_text in dashboard version 42627e7d-60e9-4307-bfe4-16fdbe59c327; historical evidence [audit 39615897041](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39615897041).
+- Remediation confirmed: the latest deployed version f6e3fc63-1e61-4f33-89eb-81277ed7a769 includes XPO_LOGIN_KEY of type **secret_text**; D1, LOGIN_LIMITER and ASSETS are bound. [Audit 39616516566 attempt 2](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39616516566) PASS. Secret values were never read.
+- Bounded HTTPS tests were attempted using only anonymous requests. [Run 39623777257](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39623777257) exposed Cloudflare 1010 (Python-urllib default browser signature); the security test now sends its own identifiable User-Agent, without disabling Cloudflare browser protections.
+- [Run 39624439731](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39624439731) reached the Worker but observed GET /login HTTP 503. The Worker returned its generic detail for a **missing or invalid runtime key value**. Metadata cannot establish that the value meets key_valid: Python str, length 32..512, at least 12 distinct characters. The runner never received or exposed the secret.
+- All temporary tests successfully **restored production workers.dev OFF and previews OFF** via a finally/fail-closed cleanup, so no active public route exists.
 
-**BLOCKER:** Do not enable workers.dev, preview URLs or another public route. In the Cloudflare Production settings, replace the plaintext variable with a **new, distinct high-entropy password** stored as a binding of type **Secret**. If the dashboard cannot change the type, delete the plaintext binding and deploy that change, then add a new binding of type Secret with the same name and deploy. Store the new password in a password manager; do not reuse the old value and do not send it to ChatGPT/GitHub. A previous plaintext Worker version may remain in version history, so rotation is essential.
+**Operator action:** generate a fresh high-entropy password (recommended 48 or more random characters; at least 12 distinct) using a trusted password manager, store it in Cloudflare Production as the **Secret** named exactly XPO_LOGIN_KEY and save/deploy the secret version. Do not reveal the value through GitHub, logs, chat or screenshots. Remove any unused XPO_LOGIN_KEY1 Text variable left from initial setup. No need to recreate D1, the Worker or the deployment API token.
 
-Future deployments have a preflight guard that rejects a login binding unless its type is `secret_text`. The read-only audit also fails deliberately for plaintext types; rerun it after replacement to verify that the latest version has `secret_text` before enabling any route. This is **not** operational acceptance.
+**Next verification:** rerun [bounded HTTPS smoke](../.github/workflows/xpo-cloudflare-private-smoke.yml), which temporarily enables production workers.dev, tests GET /login and anonymous rejection of protected assets/APIs, then disables the route automatically. If the newly generated secret still results in 503, diagnose SDK/runtime binding semantics without weakening the key validity rule.
 
+**T-016 remains BLOCKED** pending real login, HTTPS and D1 persistence acceptance. No operational data or authenticated login was tested.
 ## 1. Canonical deployment baseline
 
 Repository: [GabrielValverdeBaez/XPO-Operations](https://github.com/GabrielValverdeBaez/XPO-Operations)  
@@ -28,7 +33,7 @@ Existing, dedicated Cloudflare resources (do **not** recreate or reuse Evenio re
 | Worker | `xpo-load-studio` (ID `9f213a235e0f402a99631cc17c4a37af`) |
 | D1 EU database | `xpo-load-studio-db` (UUID `e8b2efad-4eef-4263-b2cc-5dfc636c469e`) |
 | Existing GitHub repository connection | `c4fcc3da-b670-4e13-996d-91d3b62d805b` |
-| Most recent audited Worker version | `ed97eb4f-e231-40dd-a57e-63220a363da6` |
+| Most recent audited Worker version | `f6e3fc63-1e61-4f33-89eb-81277ed7a769` |
 
 The dashboard's allocated `workers.dev` address is **not a working URL yet**. Both `workers_dev=false` and `preview_urls=false` are required by the deployment config. There is no authorized public production route at this gate.
 
@@ -64,8 +69,8 @@ The pinned Python SDK returns `JsDict` instances; the serializer must accept `di
 With the Worker version uploaded, go to the [XPO Worker dashboard](https://dash.cloudflare.com/0054188c07d3b5fe7cb20fc4f71dc212/workers/services/view/xpo-load-studio/production):
 
 1. Open **Settings > Variables and secrets** and choose **Production**, never Previews Base.
-2. Locate the current `XPO_LOGIN_KEY` row shown as **Text**. Change its type to **Secret** if Cloudflare allows editing the type; otherwise delete that Text binding, deploy the deletion, and then choose **Add variable** or **Add**. Use the exact name **`XPO_LOGIN_KEY`** with type **Secret**.
-3. Generate a distinct random high-entropy password, at least 32 characters, using a password manager. The app rejects weak/configuration-like keys (it requires at least 12 distinct characters). Store the password in the manager.
+2. Locate **`XPO_LOGIN_KEY`**, already of type **Secret**. Edit/update its value; do not change its exact name or type. Remove any leftover `XPO_LOGIN_KEY1` Text binding if present.
+3. Generate a **new** high-entropy password (recommended 48+ random characters, at least 12 distinct characters) using a password manager. Do not reuse the failed value; keep a private copy in the manager.
 4. Choose **Deploy** or the dashboard's equivalent to persist the secret. **Do not** put the password in chat, GitHub, code, logs or a plaintext variable.
 
 The already-configured GitHub Actions secret `XPO_CLOUDFLARE_API_TOKEN` is for deployment API authorization only. It is unrelated to `XPO_LOGIN_KEY`, and must not be copied or used as the application password.
@@ -74,7 +79,7 @@ If the dashboard still does not offer Add under Production, stop there and captu
 
 ## 4. Executor continuation after the operator step
 
-1. Rerun the **read-only audit** to confirm only that the `XPO_LOGIN_KEY` binding exists. The audit never reads secret values and cannot prove a password is valid.
+1. After replacing the secret value, run the **bounded HTTPS smoke**, not only the read-only audit: the binding type is already confirmed, but the prior runtime returned HTTP 503 and requires functional validation.
 2. Inspect Worker versions, D1 binding ID, rate limiter and the deployed config. Keep `workers_dev` and preview URLs off until ready.
 3. Agree a single HTTPS entry route with access protection. Enabling `workers.dev` needs a **deliberate corresponding code+CI security-gate change**; dashboard-only toggles would be overwritten by the next Wrangler deploy. Do not enable any endpoint while the key is missing.
 4. With the authorized route enabled, test anonymous `/api/history` (401), unauthenticated assets (redirect), secure+HttpOnly login cookie, invalid/repeated login (401/429), cross-origin rejection, logout and absence of secret disclosure.
