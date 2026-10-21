@@ -220,6 +220,13 @@ def test_xlsx_and_ocr_off(client):
     assert client.get('/api/config').json()['ocr_available'] is False
     assert write(client,'/api/ocr',{}).status_code==503
 
+def test_missing_limiter_fails_closed(client,env):
+    env.LOGIN_LIMITER=None
+    good=write(client,'/auth/login',{'password':KEY})
+    bad=write(client,'/auth/login',{'password':'incorrect'})
+    assert good.status_code==bad.status_code==503
+    assert KEY not in good.text
+
 def test_missing_d1_fails_closed(client,env):
     login(client);env.DB=None
     assert client.get('/api/config').status_code==503
