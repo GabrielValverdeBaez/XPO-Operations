@@ -168,4 +168,6 @@ jobs:
           # a read-only audit, not authorization to make a release public.
           if versions is None and deployments is None and secrets is None:
               raise SystemExit('Cloudflare metadata could not be read; see the HTTP/API codes above')
+          if latest_key_type == 'plain_text' or (settings_bindings is not None and settings_bindings.get('XPO_LOGIN_KEY') == 'plain_text'):
+              raise SystemExit('SECURITY BLOCK: XPO_LOGIN_KEY is a plain_text variable. Rotate and recreate it as a Cloudflare Production Secret; no public route is authorized.')
           PY
