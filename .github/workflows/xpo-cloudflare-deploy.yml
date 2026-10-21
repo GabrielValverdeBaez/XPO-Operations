@@ -2,6 +2,7 @@ name: XPO Load Studio - Cloudflare deployment
 
 # Runs entirely on GitHub-hosted Ubuntu. Never uses the Mac mini or workstation.
 # A push is safe without the XPO-specific token: it skips deployment.
+# Documentation and workflow edits do not automatically publish a new version.
 on:
   push:
     branches:
@@ -19,8 +20,6 @@ on:
       - 'scripts/smoke_cloudflare.py'
       - 'tests/**'
       - 'evidence/template-audit.json'
-      - 'docs/CLOUDFLARE_DEPLOYMENT.md'
-      - '.github/workflows/xpo-cloudflare-deploy.yml'
   workflow_dispatch:
 
 permissions:
