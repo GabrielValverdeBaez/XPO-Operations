@@ -12,4 +12,4 @@ Load Studio permanece subproyecto con motor determinista sin IA generativa oblig
 
 Conversación: «XPO Operations: continúa la ruta» ejecuta siguiente READY; «estado» consulta; «pausa» persiste; «done» solicita comprobar evidencia, no cerrar a ciegas. No hay ejecución fuera de sesión sin scheduler/runtime explícito.
 
-Estado de la primera integración y limitación de publicación: [iteración inicial](iteracion-inicial.md). Leer esta nota antes de asumir existencia de la rama remota.
+Estado y evidencias de la primera integración publicada: [iteración inicial](iteracion-inicial.md). Leer esta nota y comprobar el HEAD remoto vigente antes de continuar.

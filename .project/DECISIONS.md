@@ -7,3 +7,6 @@
 - D-005: formato de textos del operador más reciente (ES negrita, EN cursiva, CP solo en cuerpo) prevalece sobre ejemplo antiguo de skill que mostraba localidad+CP. Registrar aceptación privada pendiente.
 - D-006: validator Wtransnet instalado tiene lagunas (fecha imposible, precio no vacío y lote vacío); corregir en la copia del nuevo paquete y probar rechazos. No cambiar especialistas originales en esta fase.
 - D-007: catalogación Notion se plantea después del primer PR; no crear páginas comerciales ni una segunda base de guías sin resolver ubicación canónica.
+
+- 2026-10-22 D-008: el usuario autoriza expresamente publicar el payload revisado bfdcb75 en GitHub público mediante rama y PR borrador. Publicado con el mismo árbol como 73df20d; bloqueo inicial resuelto. Se mantienen excluidos los datos comerciales y el merge automático.
+- D-009: una tarea con gate y evidencia suficientes se cierra y permite continuar; mejoras opcionales se registran en IDEAS sin reabrir indefinidamente lo aceptado.

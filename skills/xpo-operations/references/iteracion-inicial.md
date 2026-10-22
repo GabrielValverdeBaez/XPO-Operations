@@ -1,11 +1,11 @@
-# Primera iteración y publicación pendiente
+# Primera iteración — publicación realizada
 
-22/10/2026. Repositorio objetivo GabrielValverdeBaez/XPO-Operations; rama local feat/xpo-operations-skill. Skill, cinco departamentos, contratos de tarea y memoria creados. Seis skills existentes inventariadas; workflows proyectados, fuentes privadas originales conservadas.
+22/10/2026. Repositorio GabrielValverdeBaez/XPO-Operations, rama feat/xpo-operations-skill, PR #5 DRAFT: https://github.com/GabrielValverdeBaez/XPO-Operations/pull/5.
 
-Pruebas: 30 unittest PASS, quick_validate PASS, check de enlaces/dependencias PASS. Recuperación del commit 00b8e3215d8796ecc5c043ae17027ffdaac329f3 en otro clone local con 30 tests PASS. No hay recuperación ni CI de esta rama en GitHub: la rama remota aún no existe.
+El bloqueo inicial de publicación quedó resuelto con aprobación expresa del usuario. Contenido revisado bfdcb75 publicado con árbol idéntico como 73df20db56f454d6245cb2c27b3d25bb109c47c3. Workflows XPO Operations skill 39758377311 y Wtransnet contract checks 39758374605 SUCCESS para ese commit. Verificar CI del nuevo HEAD tras cualquier cambio.
 
-La revisión automática rechazó el push a GitHub público por posible sensibilidad de procedimientos operativos y metadatos. No reintentar ni publicar por otro mecanismo sin aprobación explícita del usuario sobre el payload concreto. No afirmar que ya está publicado. La skill se conserva en el repositorio privado de skills como guardado separado; eso no publica el proyecto en GitHub.
+Se comprobó recuperación desde GitHub en otro checkout, validación de enlaces/dependencias y 30 pruebas sintéticas PASS. Skill, cinco departamentos, contratos de tarea y memoria implementados. Seis skills inventariadas; especialistas originales conservados.
 
-Ruta preparada: F0 recuperación/inventario; F1 entrada modular y contratos; F2 verificación sintética/local; F3 paridad privada y aceptación en Excel/Notion/Wtransnet; F4 conciliación con Load Studio y consolidación. Primera base implementada y probada; aceptación y paridad privada pendientes. Load Studio mantiene PR/ramas propios y no fue desplegado ni fusionado.
+Ruta: F0 recuperación; F1 entrada modular; F2 verificación sintética; F3 paridad y aceptación privada; F4 integración. Próximas tareas OPS-006 (paridad privada) y OPS-009 (incidencias). Leer .project/HANDOFF.md y STATE.json remotos antes de actuar. Cerrar tareas cuando cumplen gate; mejoras opcionales al backlog. No hay ejecución perpetua fuera de sesión.
 
-En continuidad, recuperar el checkout de trabajo si existe y leer su .project/HANDOFF.md. Si no existe, no dar por publicada la ruta ni fabricar commits/PR. Leer la skill instalada y el estado remoto real.
+No se publicaron contactos, tarifas/cargas reales, XLS ni localizadores privados. No se enviaron ofertas ni se desplegó o fusionó Load Studio. La paridad completa y aceptación con fuentes reales siguen pendientes.

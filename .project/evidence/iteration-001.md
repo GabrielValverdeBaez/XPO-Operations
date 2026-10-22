@@ -23,3 +23,8 @@ La recuperación remota y los IDs de commit/PR se registran en el checkpoint pos
 - Commit 00b8e3215d8796ecc5c043ae17027ffdaac329f3 recuperado mediante clone local --no-hardlinks en otro checkout: dependencias/enlaces y 30 pruebas PASS; árbol limpio. Esto verifica recuperación desde Git local, no desde GitHub.
 - El push público fue rechazado por revisión automática de aprobación por posible sensibilidad de procedimientos y metadatos. No se reintentó mediante otro transporte. Lectura remota confirmó que la rama no existe. CI remoto no ejecutado.
 - OPS-005 cierra exclusivamente validación sintética/local; publicación y CI quedan como bloqueo independiente explícito. OPS-010 queda cerrada como comparación y decisión, no armonización implementada.
+
+## Publicación autorizada — actualización posterior
+El usuario aprobó expresamente el payload y su publicación pública. Publicado en feat/xpo-operations-skill como commit 73df20db56f454d6245cb2c27b3d25bb109c47c3, árbol idéntico a bfdcb75 local. PR #5 DRAFT. Bloqueo anterior resuelto; queda conservado arriba como historial.
+
+GitHub Actions sobre 73df20d: XPO Operations skill [39758377311](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39758377311) SUCCESS; Wtransnet contract checks [39758374605](https://github.com/GabrielValverdeBaez/XPO-Operations/actions/runs/39758374605) SUCCESS. Recuperación desde GitHub en checkout separado: ruta y 30 pruebas PASS. Esto acredita recuperación remota del contenido publicado; no aceptación privada. Verificar CI del HEAD que actualice este documento.

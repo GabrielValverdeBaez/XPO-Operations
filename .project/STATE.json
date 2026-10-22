@@ -4,7 +4,7 @@
   "updated_at": "2026-10-22",
   "branch": "feat/xpo-operations-skill",
   "writer": "controller",
-  "maturity": "synthetic-tested; public-publication-blocked",
+  "maturity": "synthetic-tested; private-acceptance-pending",
   "tasks": [
     {
       "id": "OPS-001",
@@ -120,9 +120,24 @@
     }
   ],
   "publication": {
-    "status": "BLOCKED",
-    "reason": "Automatic approval review rejected public push of operational procedures and project metadata; explicit approval of concrete payload required.",
-    "remote_branch_exists": false,
-    "ci": "not run: branch not published"
+    "status": "PUBLISHED",
+    "branch": "feat/xpo-operations-skill",
+    "pr": 5,
+    "draft": true,
+    "approved_by_user": "2026-10-22; explicit yes to public publication of reviewed procedures excluding commercial inputs",
+    "verified_commit": "73df20db56f454d6245cb2c27b3d25bb109c47c3",
+    "ci_runs": [
+      {
+        "id": 39758377311,
+        "workflow": "XPO Operations skill",
+        "conclusion": "success"
+      },
+      {
+        "id": 39758374605,
+        "workflow": "Wtransnet contract checks",
+        "conclusion": "success"
+      }
+    ],
+    "latest_head_rule": "Recheck workflows after changes; these runs validate the listed commit only."
   }
 }
