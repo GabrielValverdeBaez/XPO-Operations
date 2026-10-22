@@ -1,15 +1,26 @@
 # XPO Operations
 
-Repositorio de planificación y futuro desarrollo de **XPO Load Studio**.
+Skill y repositorio para la operativa diaria XPO, con ruta de ejecución y memoria versionada.
 
-Aplicación web local, determinista y sin dependencia obligatoria de IA generativa, para convertir cargas procedentes de FOTE, texto, formularios, Excel y capturas en salidas XPO y Wtransnet revisables.
+- [Skill principal](skills/xpo-operations/SKILL.md): cargas, Wtransnet, proveedores, directorio, correos e incidencias.
+- [Proyecto](PROJECT.md), [ruta](ROUTE.md), [handoff](.project/HANDOFF.md) y [departamentos](.project/DEPARTMENTS.md).
+- [Fuentes inventariadas](.project/SOURCES.json) y [decisiones](.project/DECISIONS.md).
+- [Load Studio](.project/departments/load-studio/HANDOFF.md): desarrollo y despliegue separados, pendientes de sus gates.
 
-## Documentación principal
+## Uso
+Copiar skills/xpo-operations en el directorio de skills del agente, o leer su SKILL.md desde Git con acceso al repositorio. Los scripts usan Python 3 y biblioteca estándar. La instalación en ChatGPT y las conexiones privadas son capacidades distintas; copiar un repo no concede acceso a OneDrive/Notion/FOTE.
 
-- [PROJECT.md](PROJECT.md) — intención, objetivos, alcance, restricciones y decisiones de producto.
-- [ROUTE.md](ROUTE.md) — plan de ejecución por tareas, dependencias y criterios de salida.
-- [REQUIREMENTS.md](REQUIREMENTS.md) — reglas funcionales, formato operativo, validaciones y contratos de datos.
+```text
+Usa $xpo-operations para preparar esta carga.
+XPO Operations: continúa la ruta y ejecuta las tareas READY.
+XPO Operations: estado y siguiente paso.
+```
 
-**Estado actual:** planificación. Ninguna funcionalidad ha sido implementada ni validada todavía.
+## Verificación
+```bash
+python scripts/check_operations_route.py
+python -m unittest discover -s tests -p 'test_operations*.py'
+python -m unittest discover -s tests
+```
 
-**Regla de ejecución:** no inferir datos operativos críticos; conservar procedencia, requerir confirmación de campos dudosos y no enviar datos a FOTE o Wtransnet automáticamente.
+Estado: primera integración con proyecciones de seis workflows y herramientas sintéticas; la paridad completa y aceptación privada permanecen pendientes. No contiene un directorio de contactos ni tarifas comerciales. El Excel de OneDrive continúa siendo maestro. No envía ni publica ofertas automáticamente.

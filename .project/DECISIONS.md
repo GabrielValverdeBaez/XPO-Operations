@@ -1,0 +1,9 @@
+# Decisiones
+
+- 2026-10-22 D-001: ampliar el repositorio XPO-Operations existente; no crear otro repositorio ni rehacer Load Studio. Skill xpo-operations, título XPO Operations.
+- D-002: una entrada con módulos por demanda y especialistas existentes durante transición. No eliminar skills hasta prueba de paridad.
+- D-003: Git público conserva conducta reusable; OneDrive/Notion y archivos privados conservan contenido comercial. No subir la lista de correos de Andalucía del chat ni las listas nominativas de bloqueos.
+- D-004: adaptar protocolo Crear Modo Ruta/Modo Ruta de guias-ia PR #3 sin dar por probado su toolkit incompleto. Una ruta global y departamentos reales.
+- D-005: formato de textos del operador más reciente (ES negrita, EN cursiva, CP solo en cuerpo) prevalece sobre ejemplo antiguo de skill que mostraba localidad+CP. Registrar aceptación privada pendiente.
+- D-006: validator Wtransnet instalado tiene lagunas (fecha imposible, precio no vacío y lote vacío); corregir en la copia del nuevo paquete y probar rechazos. No cambiar especialistas originales en esta fase.
+- D-007: catalogación Notion se plantea después del primer PR; no crear páginas comerciales ni una segunda base de guías sin resolver ubicación canónica.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "XPO Operations"
+  short_description: "Coordina la operativa diaria XPO con trazabilidad"
+  default_prompt: "Usa $xpo-operations para resolver esta tarea diaria y continuar la ruta con evidencias."

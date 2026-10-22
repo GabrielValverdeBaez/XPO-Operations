@@ -1,0 +1,8 @@
+# Private operational inputs and generated local scratch
+private/
+local-data/
+.env*
+*.xls
+*.xlsx
+__pycache__/
+*.pyc
