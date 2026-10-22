@@ -47,9 +47,13 @@ La instalación de la skill y el repositorio GitHub son copias distintas: un com
 | Analizar perfiles, nuevas empresas, correos del lote | [Directorio](references/directorio.md) | xpo-enriquecimiento-transportistas-wtransnet |
 | Añadir/corregir/reclasificar Directorio.xlsx | [Directorio](references/directorio.md) | xpo-directorio-transportistas |
 | Proveedores estables en provincias de Notion | [Notion](references/notion.md) | directorio-notion |
+| Contactos por Andalucía/Galicia, viajes, precios históricos, observaciones o caché | [Caché privada](references/cache.md) | scripts/project_cache.py |
 | Extraer correos de un fichero | [Correos](references/correos.md) | scripts/operations.py |
 | Esperas, rechazos, devolución, reclamación | [Incidencias](references/incidencias.md) | investigación jurídica vigente si procede |
 | Crear ruta, continuar, estado, ideas, desarrollar Load Studio | [Continuidad](references/continuidad.md) | protocolo Crear Modo Ruta / Modo Ruta |
+
+## Persistir contactos y operaciones
+Leer [Caché privada](references/cache.md) para consultar o conservar contactos, rutas, viajes, precios y observaciones. Usar el snapshot privado existente para consultas documentales rápidas; distinguir rutas declaradas, viajes registrados y entregados. Después de incorporar datos observados, guardar y verificar la copia privada persistente. Mantener Directorio.xlsx como maestro y comprobar sus controles vigentes antes de recomendar. No guardar datos reales en GitHub ni confundir caché local con persistencia remota verificada.
 
 ## Validar
 - Wtransnet: ejecutar `python scripts/validate_wtransnet_rows.py` con TSV por stdin. Entregar 26 columnas, sin precios, sin Excel adjunto.

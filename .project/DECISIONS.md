@@ -12,3 +12,6 @@
 - D-009: una tarea con gate y evidencia suficientes se cierra y permite continuar; mejoras opcionales se registran en IDEAS sin reabrir indefinidamente lo aceptado.
 
 - 2026-10-22 D-010: separar invocaciones OPERATIVA (ejecutar trabajo diario) y SISTEMA (configurar/desarrollar). Consulta de estado no ejecuta tareas; excepción puntual no implica persistencia. Un cambio de skill solicitado aquí sincroniza GitHub e instalación, con evidencia de ambas.
+
+- 2026-10-22 D-011: caché privada del proyecto en SQLite local y snapshot JSON durable en OneDrive. Git versiona motor/contrato/fixtures sintéticos, nunca el contenido comercial. Directorio.xlsx conserva la autoridad de contactos.
+- D-012: separar evidencia de ruta declarada, cobertura, viaje registrado y entregado; ingresos, costes y estimaciones independientes. Los controles de color desconocidos no se aprueban. Un escritor sincroniza snapshot privado; no hay garantía de lock remoto atómico.

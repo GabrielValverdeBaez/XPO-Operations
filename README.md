@@ -33,3 +33,12 @@ python -m unittest discover -s tests
 ```
 
 Estado: primera integración con proyecciones de seis workflows y herramientas sintéticas; la paridad completa y aceptación privada permanecen pendientes. No contiene un directorio de contactos ni tarifas comerciales. El Excel de OneDrive continúa siendo maestro. No envía ni publica ofertas automáticamente.
+
+## Caché privada de contactos e histórico
+La [caché del proyecto](skills/xpo-operations/references/cache.md) conserva contactos, rutas, viajes, precios y observaciones con fuente y fecha. Datos bajo private/cache (fuera de Git), respaldo privado en la carpeta de proyecto de OneDrive. Directorio.xlsx sigue siendo maestro. Consultas iniciales de Andalucía y Galicia, distinguiendo viajes registrados, entregados y rutas declaradas.
+
+```text
+XPO Operations — OPERATIVA: dame los correos con viajes registrados a Andalucía desde la caché.
+XPO Operations — OPERATIVA: dame los correos cuya ruta declarada incluya Galicia.
+XPO Operations — OPERATIVA: guarda esta operación y su precio confirmado en el histórico.
+```

@@ -117,6 +117,16 @@
       ],
       "status": "TODO",
       "path": ".project/departments/calidad/TASKS/OPS-011.md"
+    },
+    {
+      "id": "OPS-012",
+      "department": "proveedores",
+      "title": "Implantar caché privada y recuperación de contactos e histórico",
+      "depends_on": [
+        "OPS-005"
+      ],
+      "status": "DONE",
+      "path": ".project/departments/proveedores/TASKS/OPS-012.md"
     }
   ],
   "publication": {

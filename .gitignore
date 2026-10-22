@@ -6,3 +6,8 @@ local-data/
 *.xlsx
 __pycache__/
 *.pyc
+
+# Private cache databases, exports and local sidecars
+*.sqlite3
+*.sqlite3-*
+*.db

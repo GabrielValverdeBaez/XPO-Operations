@@ -11,3 +11,6 @@ La skill modular proyecta seis workflows, conserva especialistas originales y co
 Leer STATE.json. OPS-001..005 y OPS-010 DONE con alcance documentado. OPS-006 y OPS-009 READY: paridad de reglas privadas y validación de casos de incidencia. OPS-007/008 dependen de OPS-006; OPS-011 depende de aceptaciones. No confundir estos workflows con migración completa de recursos privados. Mantener los especialistas actuales hasta aceptación.
 
 Las pruebas sintéticas no validan acceso real, estilos rojos ni edición de Excel/Notion; tampoco aceptación de Wtransnet o despliegue de Load Studio. No se han enviado correos ni ofertas ni modificado producción. Seguir tareas y gates, cerrar cada tarea al cumplir su contrato y continuar sin reabrirla por mejoras opcionales; registrar esas mejoras en IDEAS.md.
+
+## Caché privada
+OPS-012 DONE: motor de consulta/persistencia y copia privada recuperable. La consulta documental evita releer todos los datos en cada petición; para recomendar se mantienen los gates de fuentes/rojos vigentes. Ver evidencia private-cache.md y módulo cache.md.

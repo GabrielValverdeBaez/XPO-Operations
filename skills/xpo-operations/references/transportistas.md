@@ -8,3 +8,5 @@
 6. Encabezar con viajes XPO previos relevantes y después candidatos por ruta declarada/cobertura/ubicación, indicando fuerza de evidencia. Aplicar bloqueos privados antes de todo bloque de correos.
 
 Si no hay acceso a histórico o al libro real, indicar cobertura parcial y continuar solo tareas independientes autorizadas; no presentar como selección exhaustiva o aprobada. Consultar xpo-carrier-selector para contratos de respuesta y criterios especializados vigentes.
+
+Consultas documentales y persistencia del índice privado: [Caché del proyecto](cache.md). Una consulta de caché no acredita disponibilidad ni sustituye la comprobación del Directorio para selección comercial.
