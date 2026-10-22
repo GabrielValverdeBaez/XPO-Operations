@@ -127,6 +127,16 @@
       ],
       "status": "DONE",
       "path": ".project/departments/proveedores/TASKS/OPS-012.md"
+    },
+    {
+      "id": "OPS-013",
+      "department": "historico",
+      "title": "Crear departamento HIST para viajes, precios y observaciones",
+      "depends_on": [
+        "OPS-012"
+      ],
+      "status": "DONE",
+      "path": ".project/departments/historico/TASKS/OPS-013.md"
     }
   ],
   "publication": {

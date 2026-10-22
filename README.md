@@ -42,3 +42,11 @@ XPO Operations — OPERATIVA: dame los correos con viajes registrados a Andaluc�
 XPO Operations — OPERATIVA: dame los correos cuya ruta declarada incluya Galicia.
 XPO Operations — OPERATIVA: guarda esta operación y su precio confirmado en el histórico.
 ```
+
+## Histórico de viajes, precios y observaciones
+El departamento [HIST](.project/departments/historico/ROUTE.md) gestiona el histórico en la misma caché privada. Guarda cliente/transportista, estados, precios separados, observaciones y evidencia. [Contrato operativo](skills/xpo-operations/references/historico.md).
+
+```text
+XPO Operations — OPERATIVA: guarda este viaje en Histórico con su precio y observaciones.
+XPO Operations — OPERATIVA: consulta el histórico de precios de esta ruta.
+```

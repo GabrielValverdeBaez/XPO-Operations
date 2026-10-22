@@ -18,3 +18,6 @@ Crear la skill no autoriza envíos, publicación de ofertas, escritura en FOTE, 
 
 ## Aceptación global
 Paridad de los seis flujos, validadores ejecutables, recuperación desde Git sin el chat, pruebas sintéticas y aceptación con fuentes privadas vigentes. Una prueba sintética no demuestra integridad del Excel, exclusiones comerciales ni aceptación de Wtransnet.
+
+## Departamento HIST
+Histórico de viajes, precios y observaciones: conserva experiencia operativa en las tablas privadas ya existentes. Proveedores mantiene contactos y rutas declaradas. Consultar .project/DEPARTMENTS.md y módulo historico.md de la skill.

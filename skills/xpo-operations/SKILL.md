@@ -1,6 +1,6 @@
 ---
 name: xpo-operations
-description: Coordina los modos OPERATIVA para ejecutar el trabajo diario XPO y SISTEMA para configurar o desarrollar la skill y su ruta versionada en GitHub. Usar para cargas FOTE, textos ES/EN, filas Wtransnet, selección y enriquecimiento de transportistas, Directorio Excel/OneDrive, proveedores estables de Notion, correos, incidencias y continuidad de XPO Operations. Recuperar fuentes vigentes, aplicar el módulo pertinente y conservar decisiones y evidencias sin publicar datos comerciales.
+description: Coordina los modos OPERATIVA para ejecutar el trabajo diario XPO y SISTEMA para configurar o desarrollar la skill y su ruta versionada en GitHub. Usar para cargas FOTE, textos ES/EN, filas Wtransnet, selección y enriquecimiento de transportistas, Directorio Excel/OneDrive, proveedores estables de Notion, correos, incidencias, histórico de viajes/precios/observaciones y continuidad de XPO Operations. Recuperar fuentes vigentes, aplicar el módulo pertinente y conservar decisiones y evidencias sin publicar datos comerciales.
 ---
 # XPO Operations
 
@@ -47,7 +47,8 @@ La instalación de la skill y el repositorio GitHub son copias distintas: un com
 | Analizar perfiles, nuevas empresas, correos del lote | [Directorio](references/directorio.md) | xpo-enriquecimiento-transportistas-wtransnet |
 | Añadir/corregir/reclasificar Directorio.xlsx | [Directorio](references/directorio.md) | xpo-directorio-transportistas |
 | Proveedores estables en provincias de Notion | [Notion](references/notion.md) | directorio-notion |
-| Contactos por Andalucía/Galicia, viajes, precios históricos, observaciones o caché | [Caché privada](references/cache.md) | scripts/project_cache.py |
+| Guardar/consultar viajes, precios, ventas y observaciones | [Histórico (HIST)](references/historico.md) | departamento historico y scripts/project_cache.py |
+| Contactos por Andalucía/Galicia o caché | [Caché privada](references/cache.md) | scripts/project_cache.py |
 | Extraer correos de un fichero | [Correos](references/correos.md) | scripts/operations.py |
 | Esperas, rechazos, devolución, reclamación | [Incidencias](references/incidencias.md) | investigación jurídica vigente si procede |
 | Crear ruta, continuar, estado, ideas, desarrollar Load Studio | [Continuidad](references/continuidad.md) | protocolo Crear Modo Ruta / Modo Ruta |

@@ -15,3 +15,5 @@
 
 - 2026-10-22 D-011: caché privada del proyecto en SQLite local y snapshot JSON durable en OneDrive. Git versiona motor/contrato/fixtures sintéticos, nunca el contenido comercial. Directorio.xlsx conserva la autoridad de contactos.
 - D-012: separar evidencia de ruta declarada, cobertura, viaje registrado y entregado; ingresos, costes y estimaciones independientes. Los controles de color desconocidos no se aprueban. Un escritor sincroniza snapshot privado; no hay garantía de lock remoto atómico.
+
+- 2026-10-22 D-013: crear HIST (histórico de viajes, precios y observaciones), sexto departamento. Reutiliza trips/operations/observations de la misma caché; Proveedores conserva contactos/rutas declaradas/exclusiones. No duplicar base ni importar datos comerciales a Git.

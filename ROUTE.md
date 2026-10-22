@@ -14,3 +14,7 @@ Estado canónico por tarea: [.project/STATE.json](.project/STATE.json). Un escri
 Leer HANDOFF y departamento. Ejecutar siguiente READY → prueba → evaluación → corrección. DONE requiere evidencia de salida, no existencia de archivo. BLOCKED debe incluir causa y acción necesaria. Registrar historial inmutable y actualizar índice/handoff. Resolver otros trabajos independientes mientras un gate esté bloqueado.
 
 La primera integración no implica paridad completa de las seis skills, migración de contactos ni aceptación de Excel/Wtransnet/Notion. Las skills originales siguen disponibles durante transición. Tareas de Load Studio en sus ramas conservan sus propios gates y no se cierran con esta ruta.
+
+## Ampliaciones solicitadas
+- OPS-012: caché privada e histórico compartido.
+- OPS-013: departamento HIST, con responsabilidades, ruta, handoff y módulo operativo. Criterios y estado en STATE.json.

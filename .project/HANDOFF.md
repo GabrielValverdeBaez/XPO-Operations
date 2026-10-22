@@ -14,3 +14,6 @@ Las pruebas sintéticas no validan acceso real, estilos rojos ni edición de Exc
 
 ## Caché privada
 OPS-012 DONE: motor de consulta/persistencia y copia privada recuperable. La consulta documental evita releer todos los datos en cada petición; para recomendar se mantienen los gates de fuentes/rojos vigentes. Ver evidencia private-cache.md y módulo cache.md.
+
+## Departamento HIST
+OPS-013 DONE: sexto departamento para histórico de viajes, precios y observaciones. Entrada operativa en references/historico.md de la skill; documentación propia en departments/historico. Usa el mismo snapshot privado y no mueve ni duplica datos.
