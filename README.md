@@ -10,11 +10,20 @@ Skill y repositorio para la operativa diaria XPO, con ruta de ejecución y memor
 ## Uso
 Copiar skills/xpo-operations en el directorio de skills del agente, o leer su SKILL.md desde Git con acceso al repositorio. Los scripts usan Python 3 y biblioteca estándar. La instalación en ChatGPT y las conexiones privadas son capacidades distintas; copiar un repo no concede acceso a OneDrive/Notion/FOTE.
 
+| Modo | Uso |
+|---|---|
+| OPERATIVA | Ejecutar cargas, consultas, registros y otras tareas diarias |
+| SISTEMA | Configurar o desarrollar la skill, las reglas y las herramientas |
+
 ```text
-Usa $xpo-operations para preparar esta carga.
-XPO Operations: continúa la ruta y ejecuta las tareas READY.
-XPO Operations: estado y siguiente paso.
+Usa $xpo-operations en modo OPERATIVA para preparar esta carga.
+XPO Operations — OPERATIVA: añade este proveedor al Directorio.
+XPO Operations — SISTEMA: cambia esta regla y sincroniza la skill.
+XPO Operations — SISTEMA: continúa la ruta y ejecuta la siguiente tarea READY.
+XPO Operations — SISTEMA: consulta el estado; no ejecutes tareas.
 ```
+
+Sin prefijo, deducir la intención y usar OPERATIVA para el trabajo diario. «Continúa» mantiene el contexto activo. Consultar estado no activa desarrollo. Una excepción puntual no se guarda como regla permanente salvo que se solicite. Los commits en GitHub no actualizan automáticamente la skill instalada; un cambio solicitado en SISTEMA debe sincronizar ambas copias. Ver contrato completo en SKILL.md.
 
 ## Verificación
 ```bash

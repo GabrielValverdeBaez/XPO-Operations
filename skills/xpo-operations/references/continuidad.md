@@ -2,6 +2,8 @@
 
 Repositorio: https://github.com/GabrielValverdeBaez/XPO-Operations
 
+Esta referencia corresponde al modo SISTEMA. La operativa diaria se resuelve con su módulo y no activa la ruta de desarrollo. Una consulta de estado no ejecuta tareas.
+
 Para ejecución de proyecto: leer AGENTS.md → PROJECT.md → ROUTE.md → .project/DEPARTMENTS.md → .project/HANDOFF.md → ROUTE/HANDOFF del departamento → tarea y evidencia. Consultar rama y estado remoto real; no confundir main, rama de la skill y ramas de Load Studio.
 
 Seguir Crear Modo Ruta al adaptar estructura y Modo Ruta al ejecutar: un escritor, tareas con dependencias, implementación → pruebas → evaluación → corrección, checkpoint inmutable, handoff y siguiente READY. DONE exige salida y evidencia; registrar BLOCKED con causa y acción necesaria sin bloquear trabajo independiente. No reiniciar planificación en cada sesión.
@@ -10,6 +12,6 @@ Estados: TODO, READY, IN_PROGRESS, REVIEW, DONE, BLOCKED, CANCELLED. Una tarea R
 
 Load Studio permanece subproyecto con motor determinista sin IA generativa obligatoria. No declarar desplegado porque exista Worker o CI local. PR #4 y rama feat/cloudflare-deployment tienen gates propios; consultarlos antes de intervenir. No fusionar automáticamente ni cambiar producción por ejecutar la ruta de la skill.
 
-Conversación: «XPO Operations: continúa la ruta» ejecuta siguiente READY; «estado» consulta; «pausa» persiste; «done» solicita comprobar evidencia, no cerrar a ciegas. No hay ejecución fuera de sesión sin scheduler/runtime explícito.
+Conversación: «XPO Operations — SISTEMA: continúa la ruta» ejecuta siguiente READY; «estado» consulta; «pausa» persiste; «done» solicita comprobar evidencia, no cerrar a ciegas. No hay ejecución fuera de sesión sin scheduler/runtime explícito.
 
 Estado y evidencias de la primera integración publicada: [iteración inicial](iteracion-inicial.md). Leer esta nota y comprobar el HEAD remoto vigente antes de continuar.

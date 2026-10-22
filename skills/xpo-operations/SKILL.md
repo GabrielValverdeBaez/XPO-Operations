@@ -1,8 +1,35 @@
 ---
 name: xpo-operations
-description: Coordina la operativa diaria XPO y su ruta versionada en GitHub. Usar para cargas FOTE, textos ES/EN, filas Wtransnet, selección y enriquecimiento de transportistas, Directorio Excel/OneDrive, proveedores estables de Notion, correos, incidencias y continuidad de XPO Operations. Recuperar fuentes vigentes, aplicar el módulo pertinente y conservar decisiones y evidencias sin publicar datos comerciales.
+description: Coordina los modos OPERATIVA para ejecutar el trabajo diario XPO y SISTEMA para configurar o desarrollar la skill y su ruta versionada en GitHub. Usar para cargas FOTE, textos ES/EN, filas Wtransnet, selección y enriquecimiento de transportistas, Directorio Excel/OneDrive, proveedores estables de Notion, correos, incidencias y continuidad de XPO Operations. Recuperar fuentes vigentes, aplicar el módulo pertinente y conservar decisiones y evidencias sin publicar datos comerciales.
 ---
 # XPO Operations
+
+## Elegir el modo de invocación
+
+Distinguir dos usos de la misma skill. Los prefijos son instrucciones conversacionales, no comandos de un programa.
+
+| Modo | Invocación explícita | Resultado |
+|---|---|---|
+| OPERATIVA | `XPO Operations — OPERATIVA: prepara esta carga` | Resolver el trabajo diario con las reglas vigentes |
+| SISTEMA | `XPO Operations — SISTEMA: modifica esta regla de la skill` | Configurar, mantener o desarrollar la skill, sus herramientas o la ruta del proyecto |
+
+También aceptar `$xpo-operations` seguido de la petición y deducir el modo por el objetivo:
+- **OPERATIVA por defecto:** preparar textos/filas, consultar o incorporar proveedores, actualizar registros del Directorio/Notion, extraer correos o tramitar una incidencia concreta. Leer solo los módulos necesarios y terminar al entregar y validar el resultado pedido. Añadir un proveedor al Excel cambia datos operativos, no la configuración de la skill. No abrir tareas de desarrollo ni modificar las instrucciones de la skill por ejecutar una carga.
+- **SISTEMA cuando se solicita un cambio del mecanismo:** configurar o corregir reglas persistentes, formatos, validadores, integraciones, documentación, memoria del proyecto o desarrollar Load Studio. Leer el estado remoto y continuar la ruta pertinente; implementar y validar el cambio, sincronizar repositorio y skill instalada cuando corresponda, registrar evidencia y cerrar la tarea al cumplir su gate. Mejoras opcionales al backlog, sin reabrir tareas aceptadas indefinidamente.
+- **Consulta del sistema:** «estado de la ruta» o «cómo se invoca» permite consultar/explicar sin activar desarrollo. «Continúa la ruta» activa ejecución de tareas READY. «Continúa» solo conserva el modo y tarea del turno previo; no inicia desarrollo por sí solo.
+- **Petición combinada:** si pide resolver una operación y además guardar una regla, completar primero la operación y después el cambio solicitado en SISTEMA, diferenciando ambos resultados. Una excepción para esta carga no se convierte en regla permanente sin petición de conservarla. «A partir de ahora» o «guarda esta regla» sí indica persistencia.
+- Si falta un dato crítico o no puede distinguirse una excepción puntual de una regla permanente, avanzar en lo independiente y preguntar solo por esa diferencia. Evitar confirmaciones repetidas cuando la intención ya es clara.
+
+Ejemplos:
+```text
+Usa $xpo-operations en modo OPERATIVA para preparar esta carga y su fila Wtransnet.
+XPO Operations — OPERATIVA: añade este proveedor al Directorio.
+XPO Operations — SISTEMA: cambia el formato de las ofertas y sincroniza la skill.
+XPO Operations — SISTEMA: continúa la ruta y ejecuta la siguiente tarea READY.
+XPO Operations — SISTEMA: consulta el estado; no ejecutes tareas.
+```
+
+La instalación de la skill y el repositorio GitHub son copias distintas: un commit en GitHub no actualiza automáticamente la skill instalada. En una modificación solicitada desde aquí, sincronizar ambas y comprobar el guardado; si una parte falla, indicar cuál quedó pendiente. Leer el HEAD remoto vigente antes de integrar cambios. Ningún modo añade por sí mismo autorización de envío, publicación de ofertas, gasto, despliegue o merge.
 
 ## Resolver una tarea diaria
 1. Identificar la salida pedida y leer únicamente el módulo correspondiente de la tabla. Evitar cargar toda la ruta para producir un texto o una fila.

@@ -10,3 +10,5 @@
 
 - 2026-10-22 D-008: el usuario autoriza expresamente publicar el payload revisado bfdcb75 en GitHub público mediante rama y PR borrador. Publicado con el mismo árbol como 73df20d; bloqueo inicial resuelto. Se mantienen excluidos los datos comerciales y el merge automático.
 - D-009: una tarea con gate y evidencia suficientes se cierra y permite continuar; mejoras opcionales se registran en IDEAS sin reabrir indefinidamente lo aceptado.
+
+- 2026-10-22 D-010: separar invocaciones OPERATIVA (ejecutar trabajo diario) y SISTEMA (configurar/desarrollar). Consulta de estado no ejecuta tareas; excepción puntual no implica persistencia. Un cambio de skill solicitado aquí sincroniza GitHub e instalación, con evidencia de ambas.

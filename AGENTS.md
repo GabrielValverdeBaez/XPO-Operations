@@ -1,6 +1,6 @@
 # XPO Operations — ejecución
 
-Leer PROJECT.md, ROUTE.md, .project/DEPARTMENTS.md y .project/HANDOFF.md. Para una operación diaria leer solo SKILL.md y el módulo pertinente. No forzar planificación de proyecto en cada carga.
+Elegir OPERATIVA o SISTEMA por petición e intención según skills/xpo-operations/SKILL.md. En OPERATIVA leer solo la skill y el módulo necesario, resolver la tarea y cerrar sin iniciar desarrollo. En SISTEMA leer PROJECT.md, ROUTE.md, .project/DEPARTMENTS.md y .project/HANDOFF.md; una consulta de estado no autoriza ejecutar tareas. Sin prefijo, una tarea diaria permanece OPERATIVA. Sincronizar repositorio y skill instalada al modificar su configuración.
 
 Un escritor actualiza estado. Usar ramas y PR; no merge automático. Ejecutar tareas READY con dependencias DONE; iterar implementación, prueba, evaluación, corrección. Persistir checkpoint inmutable y handoff. No declarar DONE por un documento, commit, CI anterior o «done» del usuario.
 
