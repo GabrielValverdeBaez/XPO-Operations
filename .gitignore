@@ -1,0 +1,13 @@
+# Private operational inputs and generated local scratch
+private/
+local-data/
+.env*
+*.xls
+*.xlsx
+__pycache__/
+*.pyc
+
+# Private cache databases, exports and local sidecars
+*.sqlite3
+*.sqlite3-*
+*.db

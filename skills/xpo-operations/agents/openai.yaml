@@ -1,0 +1,4 @@
+interface:
+  display_name: XPO Operations
+  short_description: Operativa diaria XPO y configuración del sistema
+  default_prompt: Usa $xpo-operations en modo OPERATIVA para resolver esta tarea diaria.

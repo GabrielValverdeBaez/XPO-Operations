@@ -1,0 +1,19 @@
+name: XPO Operations skill
+on:
+  push:
+    branches: [feat/xpo-operations-skill]
+  pull_request:
+    paths: ['skills/**', '.project/**', 'scripts/check_operations_route.py', 'tests/test_operations*.py', '.github/workflows/operations-skill.yml']
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/check_operations_route.py
+      - run: python -m unittest discover -s tests -p 'test_operations*.py'

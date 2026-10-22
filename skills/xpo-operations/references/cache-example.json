@@ -1,0 +1,46 @@
+{
+  "source": {
+    "key": "synthetic-demo",
+    "version": "1",
+    "notes": "Fictitious data only"
+  },
+  "records": [
+    {
+      "row": "1",
+      "values": [
+        "Synthetic Carrier",
+        "Transportista",
+        "Carretera",
+        "FTL",
+        "Tautliner",
+        "España",
+        "Madrid",
+        "28001",
+        "Madrid",
+        "España",
+        "Madrid → Sevilla",
+        "",
+        "ops@example.com;",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    }
+  ],
+  "operations": [
+    {
+      "order_ref": "TEST-001",
+      "event_date": "2026-10-23",
+      "origin": "Madrid",
+      "destination": "Sevilla",
+      "state": "offered",
+      "customer": "Synthetic Customer",
+      "client_revenue": "100.00",
+      "carrier_cost": null,
+      "observations": "Synthetic example; not an executed sale."
+    }
+  ]
+}

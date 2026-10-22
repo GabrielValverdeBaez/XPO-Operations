@@ -1,0 +1,199 @@
+{
+  "verified_at": "2026-10-22",
+  "skills": [
+    {
+      "skill": "xpo-textos-de-cargas",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "b3051226fa8a17ae00a0e447d4c448843c059cf9257e32baeedb5a7fc2c09895"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "sha256": "1fec60a675318751eff3b77438298f7d10fcd6f2740682f26147187ca8d982f4"
+        },
+        {
+          "path": "assets/icon.svg",
+          "sha256": "49315dda7125ec5fc77ef5f2b96126d8b2121c6e72944b4702972e90f321d3ee"
+        },
+        {
+          "path": "references/direcciones-confirmadas.md",
+          "sha256": "73070872123cc14373acf701f33ccb9a45bdeea52e9fc8f90d52312374aadb65"
+        },
+        {
+          "path": "references/reglas-textos.md",
+          "sha256": "bd21fc09adc0b233ce398183c6be046a81c06e4ee50fbb524cbd5bd1480479cd"
+        }
+      ],
+      "migration": "workflow projection; private records and workbook excluded; specialist retained"
+    },
+    {
+      "skill": "genera-excel-wtransnet",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "e96d2ad2abbe9839b37430d2375413576ab8efb67ed1356d8a2879a2e8091786"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "sha256": "9c95ca34f8aa0d4eb0c36b3139a98216c60043878e92c888e1def0db80e64dc3"
+        },
+        {
+          "path": "assets/Plantilla-Wtransnet.xls",
+          "sha256": "149a1cc6f5cb81c93976ede32be6302c7eba75b8b4a561a2533ff99d5cde4022"
+        },
+        {
+          "path": "assets/icon.svg",
+          "sha256": "fbb6c7314886573cd56c3f86884a65afe3b5f4ce4bf1ee6baeeeb1fa50aea7a4"
+        },
+        {
+          "path": "references/codigos-postales-wtransnet.md",
+          "sha256": "74e0c4122e9627f39d74e609a77d160a756ae7b90c35e5d1421da35d8d9209f7"
+        },
+        {
+          "path": "references/delegaciones-xpo-espana.md",
+          "sha256": "27776b23b160e5741483ffa1917ae6bb501ecf6523c468ab6cb56c53e08b47b9"
+        },
+        {
+          "path": "references/direcciones-conocidas.md",
+          "sha256": "267468681b51ee7c811a90385febd438636b4b83954e3522b5b9d47649721284"
+        },
+        {
+          "path": "references/opciones-plantilla-wtransnet.md",
+          "sha256": "94709a853f3d21f6565f244ef51294374844ba0d211bbb9066be890774fb54ae"
+        },
+        {
+          "path": "references/precios-mercado.md",
+          "sha256": "7957b6a04b0e9394979c5238a85c762e672e0eba1b831a193e9d69a811c7eab2"
+        },
+        {
+          "path": "references/reglas-wtransnet.md",
+          "sha256": "b9e0420fb08c6c35aa6da4023ef2c6a7c61b9eb52c3052a081001738b2c37d22"
+        },
+        {
+          "path": "scripts/validate_wtransnet_rows.py",
+          "sha256": "a82cc382ae4ebb226a7886d954f075bb1f73b017ad0dc0414b520f291903c4ba"
+        }
+      ],
+      "migration": "workflow projection; private records and workbook excluded; specialist retained"
+    },
+    {
+      "skill": "xpo-carrier-selector",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "d6c9d3317c3124816b567ed04a4b6b78cc0a7ac925ba7f8b7c3c6ec478df983a"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "sha256": "6acaf206e1dbf7e2ac796ddff032b0bbdb024d61bf42326823a0fe70d2827764"
+        },
+        {
+          "path": "assets/icon.svg",
+          "sha256": "0cdb7990dea3ad89ead04743eeac2dc58c119fb0b8b4a01499a21237f155bc1a"
+        },
+        {
+          "path": "references/control_calidad.md",
+          "sha256": "cdab0f12a7925511e8d7e7c01a748187d420a3a1cf0561c2acebec192e9a9e5a"
+        },
+        {
+          "path": "references/equivalencias_localidades.md",
+          "sha256": "0433f353129018098874693b99965d7bb0f0fb76df70c8a13afac891c5493f9b"
+        },
+        {
+          "path": "references/formato_directorio_limpio.md",
+          "sha256": "bf6a9c4a1f9158bfacbc93916340c7fce0caae8123960a166c5a12f223a1611b"
+        },
+        {
+          "path": "references/formatos_respuesta.md",
+          "sha256": "d3d2056e6b34558d0b48d9e602256fe399c1aab4fec756704b44b7531ca0a41b"
+        },
+        {
+          "path": "references/historico.md",
+          "sha256": "ed5705b3798cd3e857a98a6e4eab575c3ac0169b67cfcd9ebad9d3e08da8a202"
+        },
+        {
+          "path": "references/reglas_operativas_xpo.md",
+          "sha256": "8f658e998f8499e30e95f0144d718d5ed8d6a9464ec863468c13212d896e2f13"
+        }
+      ],
+      "migration": "workflow projection; private records and workbook excluded; specialist retained"
+    },
+    {
+      "skill": "xpo-enriquecimiento-transportistas-wtransnet",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "bd308562406609affc62e2590b535071bc805dfcad643f87957bdb2b418824b4"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "sha256": "3b8e71452050286fa1fb0dc0e450d8271120803b518dfa2d4475ddde59f3f125"
+        },
+        {
+          "path": "assets/icon.svg",
+          "sha256": "e9301497fa98ef56aaca7ede0857b9a18dc06c34040f0679c609a6bf49b1d38b"
+        }
+      ],
+      "migration": "workflow projection; private records and workbook excluded; specialist retained"
+    },
+    {
+      "skill": "xpo-directorio-transportistas",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "0d8185b8c4e8ab68b9348639dca6ad135882470cdcbccce978c98c32d87d6812"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "sha256": "79e8c971d46eecbad39dbcb315f08896b3e9974e87ffd022d7a0bfd27a3af702"
+        },
+        {
+          "path": "assets/icon.svg",
+          "sha256": "fbb6c7314886573cd56c3f86884a65afe3b5f4ce4bf1ee6baeeeb1fa50aea7a4"
+        },
+        {
+          "path": "references/formato_directorio.md",
+          "sha256": "6c246b6a8492a9065c2b9e2c196a6344701f0004cc5d39a154566d3f08308f23"
+        }
+      ],
+      "migration": "workflow projection; private records and workbook excluded; specialist retained"
+    },
+    {
+      "skill": "directorio-notion",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "cbccaacbc646e6758a7052c405e6439224a226c8277874e7d6754fc38525faea"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "sha256": "e24ccf9bf3e96288fa44c356c22e603438e25b3d462767d9cbd41b274e1cd9b8"
+        },
+        {
+          "path": "assets/icon.svg",
+          "sha256": "d80a4c3e0fd2efa7af88433a53b25a92c78a644175c6669dd78fee50fb53acf6"
+        },
+        {
+          "path": "references/esquema-19-columnas.md",
+          "sha256": "7baf64ee96d1deccf1bbebcebda0e48484d62277969b841a8b8cb286b7ee06a5"
+        },
+        {
+          "path": "references/estructura-territorial.md",
+          "sha256": "c4ad06a3ef4cc68f52014c9c032ef1e0a4ad73ae6c171bbf3f6dac754bd8037a"
+        },
+        {
+          "path": "references/fuentes-y-sincronizacion.md",
+          "sha256": "77a7590ff4f21970b656e6e27974fca6c3d90bbeeecadfa746c161d64a19b1a5"
+        }
+      ],
+      "migration": "workflow projection; private records and workbook excluded; specialist retained"
+    }
+  ],
+  "route_protocol": {
+    "repository": "GabrielValverdeBaez/guias-ia",
+    "branch": "feat/crear-modo-ruta-20261022",
+    "head": "c9799eab2d23189006f3a7185f544df59e00bd7b",
+    "status": "draft PR #3; entrypoint protocol consulted; full toolkit not assumed validated"
+  }
+}

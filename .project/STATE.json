@@ -1,0 +1,163 @@
+{
+  "project": "xpo-operations",
+  "schema_version": 1,
+  "updated_at": "2026-10-22",
+  "branch": "feat/xpo-operations-skill",
+  "writer": "controller",
+  "maturity": "synthetic-tested; private-acceptance-pending",
+  "tasks": [
+    {
+      "id": "OPS-001",
+      "department": "calidad",
+      "title": "Inventariar fuentes y preservar Load Studio",
+      "depends_on": [],
+      "status": "DONE",
+      "path": ".project/departments/calidad/TASKS/OPS-001.md"
+    },
+    {
+      "id": "OPS-002",
+      "department": "calidad",
+      "title": "Crear entrada modular y ruta con departamentos",
+      "depends_on": [
+        "OPS-001"
+      ],
+      "status": "DONE",
+      "path": ".project/departments/calidad/TASKS/OPS-002.md"
+    },
+    {
+      "id": "OPS-003",
+      "department": "cargas",
+      "title": "Migrar contrato reusable de cargas y Wtransnet",
+      "depends_on": [
+        "OPS-002"
+      ],
+      "status": "DONE",
+      "path": ".project/departments/cargas/TASKS/OPS-003.md"
+    },
+    {
+      "id": "OPS-004",
+      "department": "proveedores",
+      "title": "Migrar flujos de proveedores, directorio, Notion y correos",
+      "depends_on": [
+        "OPS-002"
+      ],
+      "status": "DONE",
+      "path": ".project/departments/proveedores/TASKS/OPS-004.md"
+    },
+    {
+      "id": "OPS-005",
+      "department": "calidad",
+      "title": "Ejecutar validadores, regresión y recuperación",
+      "depends_on": [
+        "OPS-003",
+        "OPS-004"
+      ],
+      "status": "DONE",
+      "path": ".project/departments/calidad/TASKS/OPS-005.md"
+    },
+    {
+      "id": "OPS-006",
+      "department": "calidad",
+      "title": "Paridad de excepciones privadas y exclusiones",
+      "depends_on": [
+        "OPS-005"
+      ],
+      "status": "READY",
+      "path": ".project/departments/calidad/TASKS/OPS-006.md"
+    },
+    {
+      "id": "OPS-007",
+      "department": "cargas",
+      "title": "Aceptación operativa de cargas y Wtransnet",
+      "depends_on": [
+        "OPS-006"
+      ],
+      "status": "TODO",
+      "path": ".project/departments/cargas/TASKS/OPS-007.md"
+    },
+    {
+      "id": "OPS-008",
+      "department": "proveedores",
+      "title": "Aceptación de lectura y edición Excel/Notion",
+      "depends_on": [
+        "OPS-006"
+      ],
+      "status": "TODO",
+      "path": ".project/departments/proveedores/TASKS/OPS-008.md"
+    },
+    {
+      "id": "OPS-009",
+      "department": "incidencias",
+      "title": "Validar protocolo con casos jurídicos concretos",
+      "depends_on": [
+        "OPS-005"
+      ],
+      "status": "READY",
+      "path": ".project/departments/incidencias/TASKS/OPS-009.md"
+    },
+    {
+      "id": "OPS-010",
+      "department": "load-studio",
+      "title": "Conciliar contratos con ramas de Load Studio",
+      "depends_on": [
+        "OPS-005"
+      ],
+      "status": "DONE",
+      "path": ".project/departments/load-studio/TASKS/OPS-010.md"
+    },
+    {
+      "id": "OPS-011",
+      "department": "calidad",
+      "title": "Catalogar, aceptar y preparar consolidación",
+      "depends_on": [
+        "OPS-007",
+        "OPS-008",
+        "OPS-009",
+        "OPS-010"
+      ],
+      "status": "TODO",
+      "path": ".project/departments/calidad/TASKS/OPS-011.md"
+    },
+    {
+      "id": "OPS-012",
+      "department": "proveedores",
+      "title": "Implantar caché privada y recuperación de contactos e histórico",
+      "depends_on": [
+        "OPS-005"
+      ],
+      "status": "DONE",
+      "path": ".project/departments/proveedores/TASKS/OPS-012.md"
+    },
+    {
+      "id": "OPS-013",
+      "department": "historico",
+      "title": "Crear departamento HIST para viajes, precios y observaciones",
+      "depends_on": [
+        "OPS-012"
+      ],
+      "status": "DONE",
+      "path": ".project/departments/historico/TASKS/OPS-013.md"
+    }
+  ],
+  "publication": {
+    "status": "PUBLISHED",
+    "branch": "feat/xpo-operations-skill",
+    "pr": 5,
+    "draft": true,
+    "approved_by_user": "2026-10-22; explicit yes to public publication of reviewed procedures excluding commercial inputs",
+    "verified_commit": "73df20db56f454d6245cb2c27b3d25bb109c47c3",
+    "ci_runs": [
+      {
+        "id": 39758377311,
+        "workflow": "XPO Operations skill",
+        "conclusion": "success"
+      },
+      {
+        "id": 39758374605,
+        "workflow": "Wtransnet contract checks",
+        "conclusion": "success"
+      }
+    ],
+    "latest_head_rule": "Recheck workflows after changes; these runs validate the listed commit only."
+  }
+}
